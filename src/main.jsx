@@ -6,6 +6,9 @@ import CssBaseline from "@mui/material/CssBaseline";
 import theme from "./theme/index.js";
 import App from "./App.jsx";
 
+// Elimina estilos por defecto de Vite
+import "./index.css";
+
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <BrowserRouter>
