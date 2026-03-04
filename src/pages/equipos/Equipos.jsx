@@ -22,6 +22,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import HistoryIcon from "@mui/icons-material/History";
 import MainCard from "../../components/MainCard";
 import api from "../../services/api";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 
 const estadoColor = {
   disponible: "success",
@@ -113,6 +114,21 @@ export default function Equipos() {
       setDialogOpen(true);
     } catch {
       setError("El formato del script no es válido");
+    }
+  };
+
+  const [historialOpen, setHistorialOpen] = useState(false);
+  const [historial, setHistorial] = useState([]);
+  const [equipoActual, setEquipoActual] = useState(null);
+
+  const verHistorial = async (equipo) => {
+    try {
+      const res = await api.get(`/asignaciones/historial/equipo/${equipo.id}`);
+      setHistorial(res.data);
+      setEquipoActual(equipo);
+      setHistorialOpen(true);
+    } catch {
+      setError("Error al cargar el historial");
     }
   };
 
@@ -230,7 +246,10 @@ export default function Equipos() {
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Historial">
-                        <IconButton size="small">
+                        <IconButton
+                          size="small"
+                          onClick={() => verHistorial(equipo)}
+                        >
                           <HistoryIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
@@ -359,6 +378,93 @@ export default function Equipos() {
           <Button variant="contained" onClick={handleImportar}>
             Importar
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={historialOpen}
+        onClose={() => setHistorialOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          Historial de asignaciones — {equipoActual?.marca}{" "}
+          {equipoActual?.modelo}
+        </DialogTitle>
+        <DialogContent sx={{ p: 0 }}>
+          {historial.length === 0 ? (
+            <Box sx={{ p: 3 }}>
+              <Typography variant="body2" color="text.secondary">
+                Este equipo no tiene asignaciones registradas.
+              </Typography>
+            </Box>
+          ) : (
+            <Table>
+              <TableHead>
+                <TableRow sx={{ bgcolor: "background.default" }}>
+                  <TableCell>
+                    <Typography variant="subtitle1">Colaborador</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="subtitle1">Departamento</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="subtitle1">
+                      Fecha asignación
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="subtitle1">
+                      Fecha devolución
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="subtitle1">Estado</Typography>
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {historial.map((h) => (
+                  <TableRow key={h.id} hover>
+                    <TableCell>
+                      <Typography variant="body1" fontWeight={500}>
+                        {h.persona_nombre}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">{h.departamento}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">
+                        {new Date(h.fecha_asignacion).toLocaleDateString(
+                          "es-HN",
+                        )}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">
+                        {h.fecha_devolucion
+                          ? new Date(h.fecha_devolucion).toLocaleDateString(
+                              "es-HN",
+                            )
+                          : "—"}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={h.activa ? "Activa" : "Cerrada"}
+                        color={h.activa ? "success" : "default"}
+                        size="small"
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setHistorialOpen(false)}>Cerrar</Button>
         </DialogActions>
       </Dialog>
     </Box>

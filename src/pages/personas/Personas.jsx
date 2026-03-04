@@ -78,6 +78,23 @@ export default function Personas() {
     }
   };
 
+  const [historialOpen, setHistorialOpen] = useState(false);
+  const [historial, setHistorial] = useState([]);
+  const [personaActual, setPersonaActual] = useState(null);
+
+  const verHistorial = async (persona) => {
+    try {
+      const res = await api.get(
+        `/asignaciones/historial/persona/${persona.id}`,
+      );
+      setHistorial(res.data);
+      setPersonaActual(persona);
+      setHistorialOpen(true);
+    } catch {
+      setError("Error al cargar el historial");
+    }
+  };
+
   return (
     <Box>
       <Box
@@ -172,7 +189,10 @@ export default function Personas() {
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Ver equipos">
-                        <IconButton size="small">
+                        <IconButton
+                          size="small"
+                          onClick={() => verHistorial(persona)}
+                        >
                           <LaptopIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
@@ -241,6 +261,91 @@ export default function Personas() {
           <Button variant="contained" onClick={handleGuardar}>
             Guardar
           </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={historialOpen}
+        onClose={() => setHistorialOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          Historial de equipos — {personaActual?.nombre}
+        </DialogTitle>
+        <DialogContent sx={{ p: 0 }}>
+          {historial.length === 0 ? (
+            <Box sx={{ p: 3 }}>
+              <Typography variant="body2" color="text.secondary">
+                Esta persona no tiene asignaciones registradas.
+              </Typography>
+            </Box>
+          ) : (
+            <Table>
+              <TableHead>
+                <TableRow sx={{ bgcolor: "background.default" }}>
+                  <TableCell>
+                    <Typography variant="subtitle1">Equipo</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="subtitle1">Serie</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="subtitle1">
+                      Fecha asignación
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="subtitle1">
+                      Fecha devolución
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="subtitle1">Estado</Typography>
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {historial.map((h) => (
+                  <TableRow key={h.id} hover>
+                    <TableCell>
+                      <Typography variant="body1" fontWeight={500}>
+                        {h.marca} {h.modelo}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">{h.serie}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">
+                        {new Date(h.fecha_asignacion).toLocaleDateString(
+                          "es-HN",
+                        )}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">
+                        {h.fecha_devolucion
+                          ? new Date(h.fecha_devolucion).toLocaleDateString(
+                              "es-HN",
+                            )
+                          : "—"}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={h.activa ? "Activa" : "Cerrada"}
+                        color={h.activa ? "success" : "default"}
+                        size="small"
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setHistorialOpen(false)}>Cerrar</Button>
         </DialogActions>
       </Dialog>
     </Box>
