@@ -18,6 +18,10 @@ import SummarizeIcon from "@mui/icons-material/Summarize";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
+import Avatar from "@mui/material/Avatar";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+
+const BASE_URL = "http://localhost:3000";
 
 const DRAWER_WIDTH = 240;
 
@@ -64,6 +68,11 @@ const menuItems = [
         label: "Usuarios",
         icon: <ManageAccountsIcon fontSize="small" />,
         path: "/usuarios",
+      },
+      {
+        label: "Mi perfil",
+        icon: <AccountCircleIcon fontSize="small" />,
+        path: "/perfil",
       },
     ],
   },
@@ -213,24 +222,24 @@ export default function MainLayout() {
       {/* Footer */}
       <Box sx={{ px: 2.5, py: 2.5, borderTop: "1px solid #ffffff0f" }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-          <Box
+          <Avatar
+            src={
+              usuario.foto_perfil
+                ? `${BASE_URL}/uploads/fotos/${usuario.foto_perfil}`
+                : undefined
+            }
             sx={{
               width: 34,
               height: 34,
               borderRadius: 2.5,
               background: "linear-gradient(135deg, #4d8ef5, #7c3aed)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
               fontSize: "0.75rem",
               fontWeight: 700,
-              color: "white",
               fontFamily: "'DM Sans', sans-serif",
-              flexShrink: 0,
             }}
           >
-            {iniciales}
-          </Box>
+            {!usuario.foto_perfil && iniciales}
+          </Avatar>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography
               sx={{
@@ -250,7 +259,7 @@ export default function MainLayout() {
             <IconButton
               size="small"
               onClick={handleLogout}
-              sx={{ color: "#ffffff25", "&:hover": { color: "#ffffff70" } }}
+              sx={{ color: "#ffffff6a", "&:hover": { color: "#ffffff70" } }}
             >
               <LogoutIcon fontSize="small" />
             </IconButton>

@@ -9,6 +9,7 @@ import Asignaciones from "./pages/asignaciones/Asignaciones";
 import Usuarios from "./pages/usuarios/Usuarios";
 import Dashboard from "./pages/dashboard/Dashboard";
 import Reportes from "./pages/reportes/Reportes";
+import Perfil from "./pages/perfil/Perfil";
 
 const isAuthenticated = () => !!localStorage.getItem("token");
 
@@ -41,6 +42,7 @@ export default function App() {
         <Route path="/asignaciones" element={<Asignaciones />} />
         <Route path="/usuarios" element={<Usuarios />} />
         <Route path="/reportes" element={<Reportes />} />
+        <Route path="/perfil" element={<Perfil />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" />} />
