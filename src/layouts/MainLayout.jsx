@@ -18,20 +18,31 @@ import PeopleIcon from "@mui/icons-material/People";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import LogoutIcon from "@mui/icons-material/Logout";
+import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
+import SummarizeIcon from "@mui/icons-material/Summarize";
 
 const DRAWER_WIDTH = 240;
 
 const menuItems = [
-  { label: "Dashboard", icon: <DashboardIcon />, path: "/" },
+  { label: "Dashboard", icon: <DashboardIcon />, path: "/dashboard" },
   { label: "Equipos", icon: <LaptopIcon />, path: "/equipos" },
   { label: "Personas", icon: <PeopleIcon />, path: "/personas" },
   { label: "Asignaciones", icon: <AssignmentIcon />, path: "/asignaciones" },
+  { label: "Usuarios", icon: <PeopleAltIcon />, path: "/usuarios" },
+  { label: "Reportes", icon: <SummarizeIcon />, path: "/reportes" },
 ];
 
 export default function MainLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("usuario");
+    localStorage.removeItem("debe_cambiar_password");
+    window.location.href = "/login";
+  };
 
   const handleNavigate = (path) => {
     navigate(path);
@@ -97,7 +108,7 @@ export default function MainLayout() {
           </IconButton>
           <Box />
           <Tooltip title="Cerrar sesión">
-            <IconButton onClick={() => navigate("/login")}>
+            <IconButton onClick={handleLogout}>
               <LogoutIcon />
             </IconButton>
           </Tooltip>

@@ -18,13 +18,15 @@ import DialogActions from "@mui/material/DialogActions";
 import TextField from "@mui/material/TextField";
 import Alert from "@mui/material/Alert";
 import Autocomplete from "@mui/material/Autocomplete";
+import Collapse from "@mui/material/Collapse";
 import AddIcon from "@mui/icons-material/Add";
 import UndoIcon from "@mui/icons-material/Undo";
 import UploadIcon from "@mui/icons-material/Upload";
-import MainCard from "../../components/MainCard";
-import api from "../../services/api";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import MainCard from "../../components/MainCard";
+import api from "../../services/api";
 
 export default function Asignaciones() {
   const [asignaciones, setAsignaciones] = useState([]);
@@ -42,6 +44,19 @@ export default function Asignaciones() {
     notas: "",
   });
   const [fechaDevolucion, setFechaDevolucion] = useState("");
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [filtrosOpen, setFiltrosOpen] = useState(false);
+  const [filtros, setFiltros] = useState({
+    persona: "",
+    departamento: "",
+    equipo: "",
+    fecha_desde: "",
+    fecha_hasta: "",
+    usuario: "",
+  });
+  const [asignacionesFiltradas, setAsignacionesFiltradas] = useState([]);
+  const [busquedaActiva, setBusquedaActiva] = useState(false);
 
   const cargarDatos = async () => {
     try {
@@ -113,12 +128,11 @@ export default function Asignaciones() {
     setDevolucionOpen(true);
   };
 
-  const limpiarNombre = (texto) => {
-    return texto
+  const limpiarNombre = (texto) =>
+    texto
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
       .replace(/\s+/g, "_");
-  };
 
   const generarPDF = async (asignacion) => {
     try {
@@ -154,15 +168,11 @@ export default function Asignaciones() {
     }
   };
 
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState("");
-
   const previsualizarDocumento = async (asignacion) => {
     try {
       const res = await api.get(
         `/asignaciones/${asignacion.id}/documento/verificar`,
       );
-      console.log("Respuesta:", res.data);
       if (!res.data.existe) {
         setError(
           "El documento no se encontró en el servidor. Por favor sube el documento firmado nuevamente.",
@@ -171,11 +181,47 @@ export default function Asignaciones() {
       }
       setPreviewUrl(res.data.url);
       setPreviewOpen(true);
-    } catch (err) {
-      console.log("Error:", err);
+    } catch {
       setError("No se pudo verificar el documento.");
     }
   };
+
+  const buscar = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (filtros.persona) params.append("persona", filtros.persona);
+      if (filtros.departamento)
+        params.append("departamento", filtros.departamento);
+      if (filtros.equipo) params.append("equipo", filtros.equipo);
+      if (filtros.fecha_desde)
+        params.append("fecha_desde", filtros.fecha_desde);
+      if (filtros.fecha_hasta)
+        params.append("fecha_hasta", filtros.fecha_hasta);
+      if (filtros.usuario) params.append("usuario", filtros.usuario);
+      const res = await api.get(
+        `/asignaciones/buscar/resultados?${params.toString()}`,
+      );
+      setAsignacionesFiltradas(res.data);
+      setBusquedaActiva(true);
+    } catch {
+      setError("Error al buscar");
+    }
+  };
+
+  const limpiarFiltros = () => {
+    setFiltros({
+      persona: "",
+      departamento: "",
+      equipo: "",
+      fecha_desde: "",
+      fecha_hasta: "",
+      usuario: "",
+    });
+    setAsignacionesFiltradas([]);
+    setBusquedaActiva(false);
+  };
+
+  const datosMostrados = busquedaActiva ? asignacionesFiltradas : asignaciones;
 
   return (
     <Box>
@@ -184,32 +230,117 @@ export default function Asignaciones() {
           {error}
         </Alert>
       )}
+
       <Box
         sx={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          mb: 3,
+          mb: 2,
         }}
       >
         <Typography variant="h4">Asignaciones</Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => {
-            setForm({
-              equipo_id: null,
-              persona_id: null,
-              fecha_asignacion: new Date().toISOString().split("T")[0],
-              notas: "",
-            });
-            setError("");
-            setDialogOpen(true);
-          }}
-        >
-          Nueva asignación
-        </Button>
+        <Box sx={{ display: "flex", gap: 1 }}>
+          <Button
+            variant={filtrosOpen ? "contained" : "outlined"}
+            startIcon={<FilterListIcon />}
+            onClick={() => setFiltrosOpen(!filtrosOpen)}
+          >
+            Filtros {busquedaActiva && `(${asignacionesFiltradas.length})`}
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => {
+              setForm({
+                equipo_id: null,
+                persona_id: null,
+                fecha_asignacion: new Date().toISOString().split("T")[0],
+                notas: "",
+              });
+              setError("");
+              setDialogOpen(true);
+            }}
+          >
+            Nueva asignación
+          </Button>
+        </Box>
       </Box>
+
+      <Collapse in={filtrosOpen}>
+        <MainCard sx={{ mb: 2 }}>
+          <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+            <TextField
+              label="Persona"
+              size="small"
+              value={filtros.persona}
+              onChange={(e) =>
+                setFiltros({ ...filtros, persona: e.target.value })
+              }
+              sx={{ flex: 1, minWidth: 150 }}
+            />
+            <TextField
+              label="Departamento"
+              size="small"
+              value={filtros.departamento}
+              onChange={(e) =>
+                setFiltros({ ...filtros, departamento: e.target.value })
+              }
+              sx={{ flex: 1, minWidth: 150 }}
+            />
+            <TextField
+              label="Equipo o serie"
+              size="small"
+              value={filtros.equipo}
+              onChange={(e) =>
+                setFiltros({ ...filtros, equipo: e.target.value })
+              }
+              sx={{ flex: 1, minWidth: 150 }}
+            />
+            <TextField
+              label="Asignado por"
+              size="small"
+              value={filtros.usuario}
+              onChange={(e) =>
+                setFiltros({ ...filtros, usuario: e.target.value })
+              }
+              sx={{ flex: 1, minWidth: 150 }}
+            />
+            <TextField
+              label="Fecha desde"
+              type="date"
+              size="small"
+              value={filtros.fecha_desde}
+              onChange={(e) =>
+                setFiltros({ ...filtros, fecha_desde: e.target.value })
+              }
+              slotProps={{ inputLabel: { shrink: true } }}
+              sx={{ flex: 1, minWidth: 150 }}
+            />
+            <TextField
+              label="Fecha hasta"
+              type="date"
+              size="small"
+              value={filtros.fecha_hasta}
+              onChange={(e) =>
+                setFiltros({ ...filtros, fecha_hasta: e.target.value })
+              }
+              slotProps={{ inputLabel: { shrink: true } }}
+              sx={{ flex: 1, minWidth: 150 }}
+            />
+          </Box>
+          <Box
+            sx={{ display: "flex", gap: 1, mt: 2, justifyContent: "flex-end" }}
+          >
+            <Button size="small" onClick={limpiarFiltros}>
+              Limpiar
+            </Button>
+            <Button size="small" variant="contained" onClick={buscar}>
+              Buscar
+            </Button>
+          </Box>
+        </MainCard>
+      </Collapse>
 
       <MainCard content={false}>
         <TableContainer>
@@ -229,6 +360,9 @@ export default function Asignaciones() {
                   <Typography variant="subtitle1">Fecha asignación</Typography>
                 </TableCell>
                 <TableCell>
+                  <Typography variant="subtitle1">Asignado por</Typography>
+                </TableCell>
+                <TableCell>
                   <Typography variant="subtitle1">Estado</Typography>
                 </TableCell>
                 <TableCell align="right">
@@ -239,22 +373,24 @@ export default function Asignaciones() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center">
+                  <TableCell colSpan={7} align="center">
                     <Typography variant="body2" color="text.secondary">
                       Cargando...
                     </Typography>
                   </TableCell>
                 </TableRow>
-              ) : asignaciones.length === 0 ? (
+              ) : datosMostrados.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center">
+                  <TableCell colSpan={7} align="center">
                     <Typography variant="body2" color="text.secondary">
-                      No hay asignaciones registradas
+                      {busquedaActiva
+                        ? "No se encontraron resultados"
+                        : "No hay asignaciones registradas"}
                     </Typography>
                   </TableCell>
                 </TableRow>
               ) : (
-                asignaciones.map((a) => (
+                datosMostrados.map((a) => (
                   <TableRow key={a.id} hover>
                     <TableCell>
                       <Typography variant="body1" fontWeight={500}>
@@ -277,6 +413,11 @@ export default function Asignaciones() {
                         {new Date(a.fecha_asignacion).toLocaleDateString(
                           "es-HN",
                         )}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">
+                        {a.asignado_por || "—"}
                       </Typography>
                     </TableCell>
                     <TableCell>
@@ -305,7 +446,7 @@ export default function Asignaciones() {
                       <Tooltip
                         title={
                           a.documento_firmado
-                            ? "Documento firmado subido"
+                            ? "Reemplazar documento firmado"
                             : "Subir documento firmado"
                         }
                       >
@@ -442,6 +583,8 @@ export default function Asignaciones() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Dialog previsualización */}
       <Dialog
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}

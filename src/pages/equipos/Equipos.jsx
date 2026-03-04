@@ -23,6 +23,7 @@ import HistoryIcon from "@mui/icons-material/History";
 import MainCard from "../../components/MainCard";
 import api from "../../services/api";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import CodeIcon from "@mui/icons-material/Code";
 
 const estadoColor = {
   disponible: "success",
@@ -48,6 +49,8 @@ export default function Equipos() {
   const [error, setError] = useState("");
   const [importTexto, setImportTexto] = useState("");
   const [importOpen, setImportOpen] = useState(false);
+  const [scriptOpen, setScriptOpen] = useState(false);
+  const [copiado, setCopiado] = useState(false);
 
   const cargarEquipos = async () => {
     try {
@@ -144,6 +147,14 @@ export default function Equipos() {
       >
         <Typography variant="h4">Equipos</Typography>
         <Box sx={{ display: "flex", gap: 1 }}>
+          <Button
+            variant="outlined"
+            startIcon={<CodeIcon />}
+            onClick={() => setScriptOpen(true)}
+          >
+            Ver script
+          </Button>
+
           <Button
             variant="outlined"
             onClick={() => {
@@ -465,6 +476,75 @@ export default function Equipos() {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setHistorialOpen(false)}>Cerrar</Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={scriptOpen}
+        onClose={() => setScriptOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Script de PowerShell</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" mb={2}>
+            Ejecuta este script en el equipo a registrar para obtener sus datos
+            automáticamente.
+          </Typography>
+          <Box
+            sx={{
+              bgcolor: "#1e1e1e",
+              borderRadius: 2,
+              p: 2,
+              fontFamily: "monospace",
+              fontSize: "0.8rem",
+              color: "#d4d4d4",
+              whiteSpace: "pre",
+              overflowX: "auto",
+            }}
+          >
+            {`$cs   = Get-CimInstance Win32_ComputerSystem
+$bios = Get-CimInstance Win32_BIOS
+$ram  = [math]::Round((Get-CimInstance Win32_PhysicalMemory |
+          Measure-Object Capacity -Sum).Sum / 1GB, 2)
+$cpu  = Get-CimInstance Win32_Processor
+@{
+    serie      = $bios.SerialNumber
+    marca      = $cs.Manufacturer
+    procesador = $cpu.Name
+    ram        = "$ram GB"
+    modelo     = $cs.Model
+} | ConvertTo-Json -Compress`}
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setScriptOpen(false)}>Cerrar</Button>
+          <Button
+            variant="outlined"
+            color={copiado ? "success" : "primary"}
+            onClick={() => {
+              const script = `$cs   = Get-CimInstance Win32_ComputerSystem\n$bios = Get-CimInstance Win32_BIOS\n$ram  = [math]::Round((Get-CimInstance Win32_PhysicalMemory |\n          Measure-Object Capacity -Sum).Sum / 1GB, 2)\n$cpu  = Get-CimInstance Win32_Processor\n@{\n    serie      = $bios.SerialNumber\n    marca      = $cs.Manufacturer\n    procesador = $cpu.Name\n    ram        = "$ram GB"\n    modelo     = $cs.Model\n} | ConvertTo-Json -Compress`;
+              navigator.clipboard.writeText(script);
+              setCopiado(true);
+              setTimeout(() => setCopiado(false), 2500);
+            }}
+          >
+            {copiado ? "Copiado" : "Copiar"}
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              const script = `$cs   = Get-CimInstance Win32_ComputerSystem\n$bios = Get-CimInstance Win32_BIOS\n$ram  = [math]::Round((Get-CimInstance Win32_PhysicalMemory |\n          Measure-Object Capacity -Sum).Sum / 1GB, 2)\n$cpu  = Get-CimInstance Win32_Processor\n@{\n    serie      = $bios.SerialNumber\n    marca      = $cs.Manufacturer\n    procesador = $cpu.Name\n    ram        = "$ram GB"\n    modelo     = $cs.Model\n} | ConvertTo-Json -Compress`;
+              const blob = new Blob([script], { type: "text/plain" });
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement("a");
+              link.href = url;
+              link.download = "equipo_info.ps1";
+              link.click();
+              URL.revokeObjectURL(url);
+            }}
+          >
+            Descargar .ps1
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

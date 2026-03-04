@@ -41,7 +41,13 @@ export default function Login() {
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("usuario", JSON.stringify(data.usuario));
-      navigate("/");
+
+      if (data.debe_cambiar_password) {
+        localStorage.setItem("debe_cambiar_password", "true");
+        navigate("/cambiar-password");
+      } else {
+        navigate("/");
+      }
     } catch {
       setError("No se pudo conectar con el servidor.");
     } finally {
