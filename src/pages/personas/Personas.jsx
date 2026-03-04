@@ -17,10 +17,10 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import TextField from "@mui/material/TextField";
 import Alert from "@mui/material/Alert";
+import Card from "@mui/material/Card";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import LaptopIcon from "@mui/icons-material/Laptop";
-import MainCard from "../../components/MainCard";
 import api from "../../services/api";
 
 const formVacio = { nombre: "", numero_identidad: "", departamento: "" };
@@ -32,6 +32,9 @@ export default function Personas() {
   const [form, setForm] = useState(formVacio);
   const [editando, setEditando] = useState(null);
   const [error, setError] = useState("");
+  const [historialOpen, setHistorialOpen] = useState(false);
+  const [historial, setHistorial] = useState([]);
+  const [personaActual, setPersonaActual] = useState(null);
 
   const cargarPersonas = async () => {
     try {
@@ -78,10 +81,6 @@ export default function Personas() {
     }
   };
 
-  const [historialOpen, setHistorialOpen] = useState(false);
-  const [historial, setHistorial] = useState([]);
-  const [personaActual, setPersonaActual] = useState(null);
-
   const verHistorial = async (persona) => {
     try {
       const res = await api.get(
@@ -97,6 +96,12 @@ export default function Personas() {
 
   return (
     <Box>
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>
+          {error}
+        </Alert>
+      )}
+
       <Box
         sx={{
           display: "flex",
@@ -115,7 +120,7 @@ export default function Personas() {
         </Button>
       </Box>
 
-      <MainCard content={false}>
+      <Card elevation={0}>
         <TableContainer>
           <Table>
             <TableHead>
@@ -158,12 +163,22 @@ export default function Personas() {
                 personas.map((persona) => (
                   <TableRow key={persona.id} hover>
                     <TableCell>
-                      <Typography variant="body1" fontWeight={500}>
+                      <Typography
+                        variant="body1"
+                        fontWeight={600}
+                        color="text.primary"
+                      >
                         {persona.nombre}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2">
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontFamily: "'JetBrains Mono', monospace",
+                          fontSize: "0.75rem",
+                        }}
+                      >
                         {persona.numero_identidad}
                       </Typography>
                     </TableCell>
@@ -203,8 +218,9 @@ export default function Personas() {
             </TableBody>
           </Table>
         </TableContainer>
-      </MainCard>
+      </Card>
 
+      {/* Dialog nuevo/editar */}
       <Dialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
@@ -263,15 +279,15 @@ export default function Personas() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Dialog historial */}
       <Dialog
         open={historialOpen}
         onClose={() => setHistorialOpen(false)}
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle>
-          Historial de equipos — {personaActual?.nombre}
-        </DialogTitle>
+        <DialogTitle>Historial — {personaActual?.nombre}</DialogTitle>
         <DialogContent sx={{ p: 0 }}>
           {historial.length === 0 ? (
             <Box sx={{ p: 3 }}>
@@ -313,7 +329,15 @@ export default function Personas() {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2">{h.serie}</Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontFamily: "'JetBrains Mono', monospace",
+                          fontSize: "0.75rem",
+                        }}
+                      >
+                        {h.serie}
+                      </Typography>
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2">

@@ -17,9 +17,9 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import TextField from "@mui/material/TextField";
 import Alert from "@mui/material/Alert";
+import Card from "@mui/material/Card";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
-import MainCard from "../../components/MainCard";
 import api from "../../services/api";
 
 const formVacio = { nombre: "", usuario: "", password: "" };
@@ -79,6 +79,12 @@ export default function Usuarios() {
 
   return (
     <Box>
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>
+          {error}
+        </Alert>
+      )}
+
       <Box
         sx={{
           display: "flex",
@@ -97,7 +103,7 @@ export default function Usuarios() {
         </Button>
       </Box>
 
-      <MainCard content={false}>
+      <Card elevation={0}>
         <TableContainer>
           <Table>
             <TableHead>
@@ -140,12 +146,52 @@ export default function Usuarios() {
                 usuarios.map((u) => (
                   <TableRow key={u.id} hover>
                     <TableCell>
-                      <Typography variant="body1" fontWeight={500}>
-                        {u.nombre}
-                      </Typography>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1.5 }}
+                      >
+                        <Box
+                          sx={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 2,
+                            background:
+                              "linear-gradient(135deg, #4d8ef5, #7c3aed)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "0.7rem",
+                            fontWeight: 700,
+                            color: "white",
+                            flexShrink: 0,
+                            fontFamily: "'DM Sans', sans-serif",
+                          }}
+                        >
+                          {u.nombre
+                            .split(" ")
+                            .map((n) => n[0])
+                            .slice(0, 2)
+                            .join("")
+                            .toUpperCase()}
+                        </Box>
+                        <Typography
+                          variant="body1"
+                          fontWeight={600}
+                          color="text.primary"
+                        >
+                          {u.nombre}
+                        </Typography>
+                      </Box>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2">{u.usuario}</Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontFamily: "'JetBrains Mono', monospace",
+                          fontSize: "0.75rem",
+                        }}
+                      >
+                        {u.usuario}
+                      </Typography>
                     </TableCell>
                     <TableCell>
                       <Chip
@@ -172,7 +218,7 @@ export default function Usuarios() {
             </TableBody>
           </Table>
         </TableContainer>
-      </MainCard>
+      </Card>
 
       <Dialog
         open={dialogOpen}

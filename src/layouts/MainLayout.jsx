@@ -2,8 +2,6 @@ import { useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Drawer from "@mui/material/Drawer";
-import AppBar from "@mui/material/AppBar";
-import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
@@ -12,30 +10,74 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import Divider from "@mui/material/Divider";
 import Tooltip from "@mui/material/Tooltip";
-import MenuIcon from "@mui/icons-material/Menu";
+import DashboardIcon from "@mui/icons-material/Dashboard";
 import LaptopIcon from "@mui/icons-material/Laptop";
 import PeopleIcon from "@mui/icons-material/People";
 import AssignmentIcon from "@mui/icons-material/Assignment";
-import DashboardIcon from "@mui/icons-material/Dashboard";
-import LogoutIcon from "@mui/icons-material/Logout";
-import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 import SummarizeIcon from "@mui/icons-material/Summarize";
+import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
+import LogoutIcon from "@mui/icons-material/Logout";
+import MenuIcon from "@mui/icons-material/Menu";
 
 const DRAWER_WIDTH = 240;
 
 const menuItems = [
-  { label: "Dashboard", icon: <DashboardIcon />, path: "/dashboard" },
-  { label: "Equipos", icon: <LaptopIcon />, path: "/equipos" },
-  { label: "Personas", icon: <PeopleIcon />, path: "/personas" },
-  { label: "Asignaciones", icon: <AssignmentIcon />, path: "/asignaciones" },
-  { label: "Usuarios", icon: <PeopleAltIcon />, path: "/usuarios" },
-  { label: "Reportes", icon: <SummarizeIcon />, path: "/reportes" },
+  {
+    section: "General",
+    items: [
+      {
+        label: "Dashboard",
+        icon: <DashboardIcon fontSize="small" />,
+        path: "/",
+      },
+      {
+        label: "Equipos",
+        icon: <LaptopIcon fontSize="small" />,
+        path: "/equipos",
+      },
+      {
+        label: "Personas",
+        icon: <PeopleIcon fontSize="small" />,
+        path: "/personas",
+      },
+    ],
+  },
+  {
+    section: "Gestión",
+    items: [
+      {
+        label: "Asignaciones",
+        icon: <AssignmentIcon fontSize="small" />,
+        path: "/asignaciones",
+      },
+      {
+        label: "Reportes",
+        icon: <SummarizeIcon fontSize="small" />,
+        path: "/reportes",
+      },
+    ],
+  },
+  {
+    section: "Sistema",
+    items: [
+      {
+        label: "Usuarios",
+        icon: <ManageAccountsIcon fontSize="small" />,
+        path: "/usuarios",
+      },
+    ],
+  },
 ];
 
 export default function MainLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const handleNavigate = (path) => {
+    navigate(path);
+    setMobileOpen(false);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -44,120 +86,249 @@ export default function MainLayout() {
     window.location.href = "/login";
   };
 
-  const handleNavigate = (path) => {
-    navigate(path);
-    setMobileOpen(false);
-  };
+  const usuario = JSON.parse(localStorage.getItem("usuario") || "{}");
+  const iniciales = usuario.nombre
+    ? usuario.nombre
+        .split(" ")
+        .map((n) => n[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase()
+    : "??";
 
   const drawer = (
-    <Box>
-      <Toolbar sx={{ px: 2 }}>
-        <Typography variant="h5" fontWeight={700} color="primary">
+    <Box
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        bgcolor: "#1a1a2e",
+        color: "white",
+      }}
+    >
+      {/* Logo */}
+      <Box sx={{ px: 3, py: 3, borderBottom: "1px solid #ffffff0f" }}>
+        <Typography
+          sx={{
+            fontFamily: "'Outfit', sans-serif",
+            fontWeight: 700,
+            fontSize: "1.1rem",
+            color: "white",
+            letterSpacing: "-0.3px",
+          }}
+        >
           IT Assets
         </Typography>
-      </Toolbar>
-      <Divider />
-      <List sx={{ px: 1, mt: 1 }}>
-        {menuItems.map((item) => (
-          <ListItemButton
-            key={item.path}
-            selected={location.pathname === item.path}
-            onClick={() => handleNavigate(item.path)}
+        <Typography
+          sx={{
+            fontSize: "0.65rem",
+            color: "#e8a838",
+            letterSpacing: "2px",
+            textTransform: "uppercase",
+            mt: 0.3,
+            fontFamily: "'DM Sans', sans-serif",
+          }}
+        >
+          Madeyso
+        </Typography>
+      </Box>
+
+      {/* Nav */}
+      <Box sx={{ flex: 1, py: 2, overflowY: "auto" }}>
+        {menuItems.map((group) => (
+          <Box key={group.section} sx={{ mb: 1 }}>
+            <Typography
+              sx={{
+                fontSize: "0.6rem",
+                letterSpacing: "2px",
+                textTransform: "uppercase",
+                color: "#ffffff6a",
+                px: 3,
+                py: 1,
+                fontFamily: "'DM Sans', sans-serif",
+              }}
+            >
+              {group.section}
+            </Typography>
+            <List disablePadding sx={{ px: 1.5 }}>
+              {group.items.map((item) => {
+                const active = location.pathname === item.path;
+                return (
+                  <ListItemButton
+                    key={item.path}
+                    onClick={() => handleNavigate(item.path)}
+                    sx={{
+                      borderRadius: 2.5,
+                      mb: 0.25,
+                      py: 1,
+                      px: 1.5,
+                      position: "relative",
+                      color: active ? "white" : "#ffffff6a",
+                      bgcolor: active ? "#ffffff12" : "transparent",
+                      "&:hover": {
+                        bgcolor: "#ffffff08",
+                        color: "#ffffff70",
+                      },
+                      "&::before": active
+                        ? {
+                            content: '""',
+                            position: "absolute",
+                            left: -12,
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            width: 3,
+                            height: 18,
+                            bgcolor: "#e8a838",
+                            borderRadius: "0 3px 3px 0",
+                          }
+                        : {},
+                    }}
+                  >
+                    <ListItemIcon
+                      sx={{
+                        minWidth: 32,
+                        color: active ? "#e8a838" : "#ffffff6a",
+                      }}
+                    >
+                      {item.icon}
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={item.label}
+                      slotProps={{
+                        primary: {
+                          fontSize: "0.8125rem",
+                          fontWeight: active ? 600 : 400,
+                          fontFamily: "'DM Sans', sans-serif",
+                        },
+                      }}
+                    />
+                  </ListItemButton>
+                );
+              })}
+            </List>
+          </Box>
+        ))}
+      </Box>
+
+      {/* Footer */}
+      <Box sx={{ px: 2.5, py: 2.5, borderTop: "1px solid #ffffff0f" }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+          <Box
             sx={{
-              borderRadius: 2,
-              mb: 0.5,
-              "&.Mui-selected": {
-                bgcolor: "primary.main",
-                color: "white",
-                "& .MuiListItemIcon-root": { color: "white" },
-                "&:hover": { bgcolor: "primary.dark" },
-              },
+              width: 34,
+              height: 34,
+              borderRadius: 2.5,
+              background: "linear-gradient(135deg, #4d8ef5, #7c3aed)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "0.75rem",
+              fontWeight: 700,
+              color: "white",
+              fontFamily: "'DM Sans', sans-serif",
+              flexShrink: 0,
             }}
           >
-            <ListItemIcon sx={{ minWidth: 36 }}>{item.icon}</ListItemIcon>
-            <ListItemText
-              primary={item.label}
-              slotProps={{ primary: { variant: "body1" } }}
-            />
-          </ListItemButton>
-        ))}
-      </List>
+            {iniciales}
+          </Box>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography
+              sx={{
+                fontSize: "0.8rem",
+                fontWeight: 600,
+                color: "#ffffffcc",
+                lineHeight: 1.2,
+              }}
+            >
+              {usuario.usuario || "—"}
+            </Typography>
+            <Typography sx={{ fontSize: "0.65rem", color: "#ffffff6a" }}>
+              Administrador
+            </Typography>
+          </Box>
+          <Tooltip title="Cerrar sesión">
+            <IconButton
+              size="small"
+              onClick={handleLogout}
+              sx={{ color: "#ffffff25", "&:hover": { color: "#ffffff70" } }}
+            >
+              <LogoutIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      </Box>
     </Box>
   );
 
   return (
-    <Box sx={{ display: "flex" }}>
-      <AppBar
-        position="fixed"
-        elevation={0}
+    <Box
+      sx={{
+        display: "flex",
+        bgcolor: "background.default",
+        minHeight: "100vh",
+      }}
+    >
+      {/* Mobile toggle */}
+      <IconButton
+        onClick={() => setMobileOpen(true)}
         sx={{
-          width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
-          ml: { md: `${DRAWER_WIDTH}px` },
-          bgcolor: "background.paper",
-          borderBottom: "1px solid #f0f0f0",
-          color: "text.primary",
+          display: { md: "none" },
+          position: "fixed",
+          top: 16,
+          left: 16,
+          zIndex: 1200,
+          bgcolor: "#1a1a2e",
+          color: "white",
+          "&:hover": { bgcolor: "#2d2d4e" },
         }}
       >
-        <Toolbar sx={{ justifyContent: "space-between" }}>
-          <IconButton
-            edge="start"
-            onClick={() => setMobileOpen(true)}
-            sx={{ display: { md: "none" } }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Box />
-          <Tooltip title="Cerrar sesión">
-            <IconButton onClick={handleLogout}>
-              <LogoutIcon />
-            </IconButton>
-          </Tooltip>
-        </Toolbar>
-      </AppBar>
+        <MenuIcon />
+      </IconButton>
 
-      <Box
-        component="nav"
-        sx={{ width: { md: DRAWER_WIDTH }, flexShrink: { md: 0 } }}
+      {/* Drawer mobile */}
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        ModalProps={{ keepMounted: true }}
+        sx={{
+          display: { xs: "block", md: "none" },
+          "& .MuiDrawer-paper": { width: DRAWER_WIDTH, border: "none" },
+        }}
       >
-        <Drawer
-          variant="temporary"
-          open={mobileOpen}
-          onClose={() => setMobileOpen(false)}
-          ModalProps={{ keepMounted: true }}
-          sx={{
-            display: { xs: "block", md: "none" },
-            "& .MuiDrawer-paper": { width: DRAWER_WIDTH },
-          }}
-        >
-          {drawer}
-        </Drawer>
-        <Drawer
-          variant="permanent"
-          sx={{
-            display: { xs: "none", md: "block" },
-            "& .MuiDrawer-paper": {
-              width: DRAWER_WIDTH,
-              boxSizing: "border-box",
-            },
-          }}
-          open
-        >
-          {drawer}
-        </Drawer>
-      </Box>
+        {drawer}
+      </Drawer>
 
+      {/* Drawer desktop */}
+      <Drawer
+        variant="permanent"
+        sx={{
+          display: { xs: "none", md: "block" },
+          "& .MuiDrawer-paper": {
+            width: DRAWER_WIDTH,
+            border: "none",
+            boxSizing: "border-box",
+          },
+        }}
+        open
+      >
+        {drawer}
+      </Drawer>
+
+      {/* Contenido */}
       <Box
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
           width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
-          mt: "64px",
+          ml: { md: `${DRAWER_WIDTH}px` },
           minHeight: "100vh",
           bgcolor: "background.default",
         }}
       >
-        <Outlet />
+        <Box sx={{ p: 3 }}>
+          <Outlet />
+        </Box>
       </Box>
     </Box>
   );

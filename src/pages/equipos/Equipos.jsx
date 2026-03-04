@@ -17,13 +17,14 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import TextField from "@mui/material/TextField";
 import Alert from "@mui/material/Alert";
+import Card from "@mui/material/Card";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import HistoryIcon from "@mui/icons-material/History";
-import MainCard from "../../components/MainCard";
-import api from "../../services/api";
-import VisibilityIcon from "@mui/icons-material/Visibility";
 import CodeIcon from "@mui/icons-material/Code";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import DownloadIcon from "@mui/icons-material/Download";
+import api from "../../services/api";
 
 const estadoColor = {
   disponible: "success",
@@ -40,6 +41,21 @@ const formVacio = {
   descripcion: "",
 };
 
+const SCRIPT = `$cs   = Get-CimInstance Win32_ComputerSystem
+$bios = Get-CimInstance Win32_BIOS
+$ram  = [math]::Round((Get-CimInstance Win32_PhysicalMemory |
+          Measure-Object Capacity -Sum).Sum / 1GB, 2)
+$cpu  = Get-CimInstance Win32_Processor
+@{
+    serie      = $bios.SerialNumber
+    marca      = $cs.Manufacturer
+    procesador = $cpu.Name
+    ram        = "$ram GB"
+    modelo     = $cs.Model
+} | ConvertTo-Json -Compress`;
+
+const SCRIPT_RAW = `$cs   = Get-CimInstance Win32_ComputerSystem\n$bios = Get-CimInstance Win32_BIOS\n$ram  = [math]::Round((Get-CimInstance Win32_PhysicalMemory |\n          Measure-Object Capacity -Sum).Sum / 1GB, 2)\n$cpu  = Get-CimInstance Win32_Processor\n@{\n    serie      = $bios.SerialNumber\n    marca      = $cs.Manufacturer\n    procesador = $cpu.Name\n    ram        = "$ram GB"\n    modelo     = $cs.Model\n} | ConvertTo-Json -Compress`;
+
 export default function Equipos() {
   const [equipos, setEquipos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -51,6 +67,9 @@ export default function Equipos() {
   const [importOpen, setImportOpen] = useState(false);
   const [scriptOpen, setScriptOpen] = useState(false);
   const [copiado, setCopiado] = useState(false);
+  const [historialOpen, setHistorialOpen] = useState(false);
+  const [historial, setHistorial] = useState([]);
+  const [equipoActual, setEquipoActual] = useState(null);
 
   const cargarEquipos = async () => {
     try {
@@ -120,10 +139,6 @@ export default function Equipos() {
     }
   };
 
-  const [historialOpen, setHistorialOpen] = useState(false);
-  const [historial, setHistorial] = useState([]);
-  const [equipoActual, setEquipoActual] = useState(null);
-
   const verHistorial = async (equipo) => {
     try {
       const res = await api.get(`/asignaciones/historial/equipo/${equipo.id}`);
@@ -135,8 +150,30 @@ export default function Equipos() {
     }
   };
 
+  const copiarScript = () => {
+    navigator.clipboard.writeText(SCRIPT_RAW);
+    setCopiado(true);
+    setTimeout(() => setCopiado(false), 2500);
+  };
+
+  const descargarScript = () => {
+    const blob = new Blob([SCRIPT_RAW], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "equipo_info.ps1";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <Box>
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>
+          {error}
+        </Alert>
+      )}
+
       <Box
         sx={{
           display: "flex",
@@ -154,7 +191,6 @@ export default function Equipos() {
           >
             Ver script
           </Button>
-
           <Button
             variant="outlined"
             onClick={() => {
@@ -174,7 +210,7 @@ export default function Equipos() {
         </Box>
       </Box>
 
-      <MainCard content={false}>
+      <Card elevation={0}>
         <TableContainer>
           <Table>
             <TableHead>
@@ -220,7 +256,11 @@ export default function Equipos() {
                 equipos.map((equipo) => (
                   <TableRow key={equipo.id} hover>
                     <TableCell>
-                      <Typography variant="body1" fontWeight={500}>
+                      <Typography
+                        variant="body1"
+                        fontWeight={600}
+                        color="text.primary"
+                      >
                         {equipo.marca}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
@@ -228,7 +268,15 @@ export default function Equipos() {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2">{equipo.serie}</Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontFamily: "'DM Mono', monospace",
+                          fontSize: "0.75rem",
+                        }}
+                      >
+                        {equipo.serie}
+                      </Typography>
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2">
@@ -271,7 +319,7 @@ export default function Equipos() {
             </TableBody>
           </Table>
         </TableContainer>
-      </MainCard>
+      </Card>
 
       {/* Dialog nuevo/editar */}
       <Dialog
@@ -354,7 +402,7 @@ export default function Equipos() {
         </DialogActions>
       </Dialog>
 
-      {/* Dialog importar desde script */}
+      {/* Dialog importar */}
       <Dialog
         open={importOpen}
         onClose={() => setImportOpen(false)}
@@ -392,6 +440,7 @@ export default function Equipos() {
         </DialogActions>
       </Dialog>
 
+      {/* Dialog historial */}
       <Dialog
         open={historialOpen}
         onClose={() => setHistorialOpen(false)}
@@ -399,8 +448,7 @@ export default function Equipos() {
         fullWidth
       >
         <DialogTitle>
-          Historial de asignaciones — {equipoActual?.marca}{" "}
-          {equipoActual?.modelo}
+          Historial — {equipoActual?.marca} {equipoActual?.modelo}
         </DialogTitle>
         <DialogContent sx={{ p: 0 }}>
           {historial.length === 0 ? (
@@ -478,6 +526,8 @@ export default function Equipos() {
           <Button onClick={() => setHistorialOpen(false)}>Cerrar</Button>
         </DialogActions>
       </Dialog>
+
+      {/* Dialog script */}
       <Dialog
         open={scriptOpen}
         onClose={() => setScriptOpen(false)}
@@ -492,28 +542,19 @@ export default function Equipos() {
           </Typography>
           <Box
             sx={{
-              bgcolor: "#1e1e1e",
+              bgcolor: "#13131a",
               borderRadius: 2,
-              p: 2,
-              fontFamily: "monospace",
-              fontSize: "0.8rem",
+              p: 2.5,
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: "0.78rem",
               color: "#d4d4d4",
               whiteSpace: "pre",
               overflowX: "auto",
+              lineHeight: 1.7,
+              border: "1px solid #1e1e28",
             }}
           >
-            {`$cs   = Get-CimInstance Win32_ComputerSystem
-$bios = Get-CimInstance Win32_BIOS
-$ram  = [math]::Round((Get-CimInstance Win32_PhysicalMemory |
-          Measure-Object Capacity -Sum).Sum / 1GB, 2)
-$cpu  = Get-CimInstance Win32_Processor
-@{
-    serie      = $bios.SerialNumber
-    marca      = $cs.Manufacturer
-    procesador = $cpu.Name
-    ram        = "$ram GB"
-    modelo     = $cs.Model
-} | ConvertTo-Json -Compress`}
+            {SCRIPT}
           </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
@@ -521,27 +562,15 @@ $cpu  = Get-CimInstance Win32_Processor
           <Button
             variant="outlined"
             color={copiado ? "success" : "primary"}
-            onClick={() => {
-              const script = `$cs   = Get-CimInstance Win32_ComputerSystem\n$bios = Get-CimInstance Win32_BIOS\n$ram  = [math]::Round((Get-CimInstance Win32_PhysicalMemory |\n          Measure-Object Capacity -Sum).Sum / 1GB, 2)\n$cpu  = Get-CimInstance Win32_Processor\n@{\n    serie      = $bios.SerialNumber\n    marca      = $cs.Manufacturer\n    procesador = $cpu.Name\n    ram        = "$ram GB"\n    modelo     = $cs.Model\n} | ConvertTo-Json -Compress`;
-              navigator.clipboard.writeText(script);
-              setCopiado(true);
-              setTimeout(() => setCopiado(false), 2500);
-            }}
+            startIcon={<ContentCopyIcon />}
+            onClick={copiarScript}
           >
             {copiado ? "Copiado" : "Copiar"}
           </Button>
           <Button
             variant="contained"
-            onClick={() => {
-              const script = `$cs   = Get-CimInstance Win32_ComputerSystem\n$bios = Get-CimInstance Win32_BIOS\n$ram  = [math]::Round((Get-CimInstance Win32_PhysicalMemory |\n          Measure-Object Capacity -Sum).Sum / 1GB, 2)\n$cpu  = Get-CimInstance Win32_Processor\n@{\n    serie      = $bios.SerialNumber\n    marca      = $cs.Manufacturer\n    procesador = $cpu.Name\n    ram        = "$ram GB"\n    modelo     = $cs.Model\n} | ConvertTo-Json -Compress`;
-              const blob = new Blob([script], { type: "text/plain" });
-              const url = URL.createObjectURL(blob);
-              const link = document.createElement("a");
-              link.href = url;
-              link.download = "equipo_info.ps1";
-              link.click();
-              URL.revokeObjectURL(url);
-            }}
+            startIcon={<DownloadIcon />}
+            onClick={descargarScript}
           >
             Descargar .ps1
           </Button>

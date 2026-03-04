@@ -19,13 +19,14 @@ import TextField from "@mui/material/TextField";
 import Alert from "@mui/material/Alert";
 import Autocomplete from "@mui/material/Autocomplete";
 import Collapse from "@mui/material/Collapse";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
 import AddIcon from "@mui/icons-material/Add";
 import UndoIcon from "@mui/icons-material/Undo";
 import UploadIcon from "@mui/icons-material/Upload";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import FilterListIcon from "@mui/icons-material/FilterList";
-import MainCard from "../../components/MainCard";
 import api from "../../services/api";
 
 export default function Asignaciones() {
@@ -144,8 +145,10 @@ export default function Asignaciones() {
       );
       const link = document.createElement("a");
       link.href = url;
-      const nombreArchivo = `constancia_${limpiarNombre(asignacion.persona_nombre)}_${new Date(asignacion.fecha_asignacion).toLocaleDateString("es-HN").replace(/\//g, "-")}.pdf`;
-      link.setAttribute("download", nombreArchivo);
+      link.setAttribute(
+        "download",
+        `constancia_${limpiarNombre(asignacion.persona_nombre)}_${new Date(asignacion.fecha_asignacion).toLocaleDateString("es-HN").replace(/\//g, "-")}.pdf`,
+      );
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -268,81 +271,88 @@ export default function Asignaciones() {
       </Box>
 
       <Collapse in={filtrosOpen}>
-        <MainCard sx={{ mb: 2 }}>
-          <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-            <TextField
-              label="Persona"
-              size="small"
-              value={filtros.persona}
-              onChange={(e) =>
-                setFiltros({ ...filtros, persona: e.target.value })
-              }
-              sx={{ flex: 1, minWidth: 150 }}
-            />
-            <TextField
-              label="Departamento"
-              size="small"
-              value={filtros.departamento}
-              onChange={(e) =>
-                setFiltros({ ...filtros, departamento: e.target.value })
-              }
-              sx={{ flex: 1, minWidth: 150 }}
-            />
-            <TextField
-              label="Equipo o serie"
-              size="small"
-              value={filtros.equipo}
-              onChange={(e) =>
-                setFiltros({ ...filtros, equipo: e.target.value })
-              }
-              sx={{ flex: 1, minWidth: 150 }}
-            />
-            <TextField
-              label="Asignado por"
-              size="small"
-              value={filtros.usuario}
-              onChange={(e) =>
-                setFiltros({ ...filtros, usuario: e.target.value })
-              }
-              sx={{ flex: 1, minWidth: 150 }}
-            />
-            <TextField
-              label="Fecha desde"
-              type="date"
-              size="small"
-              value={filtros.fecha_desde}
-              onChange={(e) =>
-                setFiltros({ ...filtros, fecha_desde: e.target.value })
-              }
-              slotProps={{ inputLabel: { shrink: true } }}
-              sx={{ flex: 1, minWidth: 150 }}
-            />
-            <TextField
-              label="Fecha hasta"
-              type="date"
-              size="small"
-              value={filtros.fecha_hasta}
-              onChange={(e) =>
-                setFiltros({ ...filtros, fecha_hasta: e.target.value })
-              }
-              slotProps={{ inputLabel: { shrink: true } }}
-              sx={{ flex: 1, minWidth: 150 }}
-            />
-          </Box>
-          <Box
-            sx={{ display: "flex", gap: 1, mt: 2, justifyContent: "flex-end" }}
-          >
-            <Button size="small" onClick={limpiarFiltros}>
-              Limpiar
-            </Button>
-            <Button size="small" variant="contained" onClick={buscar}>
-              Buscar
-            </Button>
-          </Box>
-        </MainCard>
+        <Card elevation={0} sx={{ mb: 2 }}>
+          <CardContent>
+            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+              <TextField
+                label="Persona"
+                size="small"
+                value={filtros.persona}
+                onChange={(e) =>
+                  setFiltros({ ...filtros, persona: e.target.value })
+                }
+                sx={{ flex: 1, minWidth: 150 }}
+              />
+              <TextField
+                label="Departamento"
+                size="small"
+                value={filtros.departamento}
+                onChange={(e) =>
+                  setFiltros({ ...filtros, departamento: e.target.value })
+                }
+                sx={{ flex: 1, minWidth: 150 }}
+              />
+              <TextField
+                label="Equipo o serie"
+                size="small"
+                value={filtros.equipo}
+                onChange={(e) =>
+                  setFiltros({ ...filtros, equipo: e.target.value })
+                }
+                sx={{ flex: 1, minWidth: 150 }}
+              />
+              <TextField
+                label="Asignado por"
+                size="small"
+                value={filtros.usuario}
+                onChange={(e) =>
+                  setFiltros({ ...filtros, usuario: e.target.value })
+                }
+                sx={{ flex: 1, minWidth: 150 }}
+              />
+              <TextField
+                label="Fecha desde"
+                type="date"
+                size="small"
+                value={filtros.fecha_desde}
+                onChange={(e) =>
+                  setFiltros({ ...filtros, fecha_desde: e.target.value })
+                }
+                slotProps={{ inputLabel: { shrink: true } }}
+                sx={{ flex: 1, minWidth: 150 }}
+              />
+              <TextField
+                label="Fecha hasta"
+                type="date"
+                size="small"
+                value={filtros.fecha_hasta}
+                onChange={(e) =>
+                  setFiltros({ ...filtros, fecha_hasta: e.target.value })
+                }
+                slotProps={{ inputLabel: { shrink: true } }}
+                sx={{ flex: 1, minWidth: 150 }}
+              />
+            </Box>
+            <Box
+              sx={{
+                display: "flex",
+                gap: 1,
+                mt: 2,
+                justifyContent: "flex-end",
+              }}
+            >
+              <Button size="small" onClick={limpiarFiltros}>
+                Limpiar
+              </Button>
+              <Button size="small" variant="contained" onClick={buscar}>
+                Buscar
+              </Button>
+            </Box>
+          </CardContent>
+        </Card>
       </Collapse>
 
-      <MainCard content={false}>
+      <Card elevation={0}>
         <TableContainer>
           <Table>
             <TableHead>
@@ -393,7 +403,11 @@ export default function Asignaciones() {
                 datosMostrados.map((a) => (
                   <TableRow key={a.id} hover>
                     <TableCell>
-                      <Typography variant="body1" fontWeight={500}>
+                      <Typography
+                        variant="body1"
+                        fontWeight={600}
+                        color="text.primary"
+                      >
                         {a.persona_nombre}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
@@ -401,12 +415,20 @@ export default function Asignaciones() {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body1">
+                      <Typography variant="body2">
                         {a.marca} {a.modelo}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2">{a.serie}</Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontFamily: "'JetBrains Mono', monospace",
+                          fontSize: "0.75rem",
+                        }}
+                      >
+                        {a.serie}
+                      </Typography>
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2">
@@ -484,7 +506,7 @@ export default function Asignaciones() {
             </TableBody>
           </Table>
         </TableContainer>
-      </MainCard>
+      </Card>
 
       {/* Dialog nueva asignación */}
       <Dialog

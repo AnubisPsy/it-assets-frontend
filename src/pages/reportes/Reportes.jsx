@@ -72,14 +72,12 @@ export default function Reportes() {
       }
 
       const nombreArchivo = `${reporte.titulo.replace(/\s+/g, "_")}_${hoy}`;
-
       if (formato === "excel") {
         exportarExcel(datos, reporte.columnas, nombreArchivo);
       } else {
         exportarPDF(datos, reporte.columnas, reporte.titulo, nombreArchivo);
       }
 
-      // Limpiar inputs
       if (tipo === "historialPersona") setPersona("");
       if (tipo === "historialEquipo") setEquipo("");
       if (tipo === "historialUsuario") setUsuario("");
@@ -110,6 +108,24 @@ export default function Reportes() {
     </Box>
   );
 
+  const ReporteCard = ({ titulo, descripcion, tipo, children }) => (
+    <Card elevation={0} sx={{ height: "100%" }}>
+      <CardContent
+        sx={{ p: 3, height: "100%", display: "flex", flexDirection: "column" }}
+      >
+        <Typography variant="h6" fontWeight={600}>
+          {titulo}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" mt={0.5} mb={2}>
+          {descripcion}
+        </Typography>
+        <Divider sx={{ mb: 2 }} />
+        {children}
+        <BotonesExportar tipo={tipo} />
+      </CardContent>
+    </Card>
+  );
+
   return (
     <Box>
       <Typography variant="h4" mb={3}>
@@ -123,209 +139,105 @@ export default function Reportes() {
       )}
 
       <Grid container spacing={2}>
-        {/* Equipos */}
         <Grid size={{ xs: 12, md: 6 }}>
-          <Card
-            elevation={0}
-            sx={{
-              border: "1px solid #f0f0f0",
-              borderRadius: 3,
-              height: "100%",
-            }}
-          >
-            <CardContent sx={{ p: 3 }}>
-              <Typography variant="h6" fontWeight={600}>
-                Equipos
-              </Typography>
-              <Typography variant="body2" color="text.secondary" mt={0.5}>
-                Lista completa de equipos registrados con su estado actual.
-              </Typography>
-              <Divider sx={{ my: 2 }} />
-              <BotonesExportar tipo="equipos" />
-            </CardContent>
-          </Card>
+          <ReporteCard
+            tipo="equipos"
+            titulo="Equipos"
+            descripcion="Lista completa de equipos registrados con su estado actual."
+          />
         </Grid>
 
-        {/* Sin documento firmado */}
         <Grid size={{ xs: 12, md: 6 }}>
-          <Card
-            elevation={0}
-            sx={{
-              border: "1px solid #f0f0f0",
-              borderRadius: 3,
-              height: "100%",
-            }}
-          >
-            <CardContent sx={{ p: 3 }}>
-              <Typography variant="h6" fontWeight={600}>
-                Sin documento firmado
-              </Typography>
-              <Typography variant="body2" color="text.secondary" mt={0.5}>
-                Asignaciones activas que aún no tienen constancia firmada
-                subida.
-              </Typography>
-              <Divider sx={{ my: 2 }} />
-              <BotonesExportar tipo="sinDocumento" />
-            </CardContent>
-          </Card>
+          <ReporteCard
+            tipo="sinDocumento"
+            titulo="Sin documento firmado"
+            descripcion="Asignaciones activas que aún no tienen constancia firmada subida."
+          />
         </Grid>
 
-        {/* Equipos por colaborador */}
         <Grid size={{ xs: 12, md: 6 }}>
-          <Card
-            elevation={0}
-            sx={{
-              border: "1px solid #f0f0f0",
-              borderRadius: 3,
-              height: "100%",
-            }}
-          >
-            <CardContent sx={{ p: 3 }}>
-              <Typography variant="h6" fontWeight={600}>
-                Equipos por colaborador
-              </Typography>
-              <Typography variant="body2" color="text.secondary" mt={0.5}>
-                Equipos actualmente asignados a cada colaborador.
-              </Typography>
-              <Divider sx={{ my: 2 }} />
-              <BotonesExportar tipo="equiposPorColaborador" />
-            </CardContent>
-          </Card>
+          <ReporteCard
+            tipo="equiposPorColaborador"
+            titulo="Equipos por colaborador"
+            descripcion="Equipos actualmente asignados a cada colaborador."
+          />
         </Grid>
 
-        {/* Asignaciones por fecha */}
         <Grid size={{ xs: 12, md: 6 }}>
-          <Card
-            elevation={0}
-            sx={{
-              border: "1px solid #f0f0f0",
-              borderRadius: 3,
-              height: "100%",
-            }}
+          <ReporteCard
+            tipo="asignaciones"
+            titulo="Asignaciones por rango de fechas"
+            descripcion="Todas las asignaciones realizadas en el período seleccionado."
           >
-            <CardContent sx={{ p: 3 }}>
-              <Typography variant="h6" fontWeight={600}>
-                Asignaciones por rango de fechas
-              </Typography>
-              <Typography variant="body2" color="text.secondary" mt={0.5}>
-                Todas las asignaciones realizadas en el período seleccionado.
-              </Typography>
-              <Divider sx={{ my: 2 }} />
-              <Box sx={{ display: "flex", gap: 2 }}>
-                <TextField
-                  size="small"
-                  type="date"
-                  label="Desde"
-                  value={fechaDesde}
-                  onChange={(e) => setFechaDesde(e.target.value)}
-                  slotProps={{ inputLabel: { shrink: true } }}
-                  sx={{ flex: 1 }}
-                />
-                <TextField
-                  size="small"
-                  type="date"
-                  label="Hasta"
-                  value={fechaHasta}
-                  onChange={(e) => setFechaHasta(e.target.value)}
-                  slotProps={{ inputLabel: { shrink: true } }}
-                  sx={{ flex: 1 }}
-                />
-              </Box>
-              <BotonesExportar tipo="asignaciones" />
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Historial por persona */}
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Card
-            elevation={0}
-            sx={{
-              border: "1px solid #f0f0f0",
-              borderRadius: 3,
-              height: "100%",
-            }}
-          >
-            <CardContent sx={{ p: 3 }}>
-              <Typography variant="h6" fontWeight={600}>
-                Historial por persona
-              </Typography>
-              <Typography variant="body2" color="text.secondary" mt={0.5}>
-                Todas las asignaciones de una persona. Dejar vacío para obtener
-                todas.
-              </Typography>
-              <Divider sx={{ my: 2 }} />
+            <Box sx={{ display: "flex", gap: 2 }}>
               <TextField
-                fullWidth
                 size="small"
-                label="Nombre del colaborador"
-                value={persona}
-                onChange={(e) => setPersona(e.target.value)}
+                type="date"
+                label="Desde"
+                value={fechaDesde}
+                onChange={(e) => setFechaDesde(e.target.value)}
+                slotProps={{ inputLabel: { shrink: true } }}
+                sx={{ flex: 1 }}
               />
-              <BotonesExportar tipo="historialPersona" />
-            </CardContent>
-          </Card>
+              <TextField
+                size="small"
+                type="date"
+                label="Hasta"
+                value={fechaHasta}
+                onChange={(e) => setFechaHasta(e.target.value)}
+                slotProps={{ inputLabel: { shrink: true } }}
+                sx={{ flex: 1 }}
+              />
+            </Box>
+          </ReporteCard>
         </Grid>
 
-        {/* Historial por equipo */}
         <Grid size={{ xs: 12, md: 4 }}>
-          <Card
-            elevation={0}
-            sx={{
-              border: "1px solid #f0f0f0",
-              borderRadius: 3,
-              height: "100%",
-            }}
+          <ReporteCard
+            tipo="historialPersona"
+            titulo="Historial por persona"
+            descripcion="Todas las asignaciones de una persona. Dejar vacío para obtener todas."
           >
-            <CardContent sx={{ p: 3 }}>
-              <Typography variant="h6" fontWeight={600}>
-                Historial por equipo
-              </Typography>
-              <Typography variant="body2" color="text.secondary" mt={0.5}>
-                Todas las asignaciones de un equipo. Dejar vacío para obtener
-                todas.
-              </Typography>
-              <Divider sx={{ my: 2 }} />
-              <TextField
-                fullWidth
-                size="small"
-                label="Marca, modelo o serie"
-                value={equipo}
-                onChange={(e) => setEquipo(e.target.value)}
-              />
-              <BotonesExportar tipo="historialEquipo" />
-            </CardContent>
-          </Card>
+            <TextField
+              fullWidth
+              size="small"
+              label="Nombre del colaborador"
+              value={persona}
+              onChange={(e) => setPersona(e.target.value)}
+            />
+          </ReporteCard>
         </Grid>
 
-        {/* Historial por usuario */}
         <Grid size={{ xs: 12, md: 4 }}>
-          <Card
-            elevation={0}
-            sx={{
-              border: "1px solid #f0f0f0",
-              borderRadius: 3,
-              height: "100%",
-            }}
+          <ReporteCard
+            tipo="historialEquipo"
+            titulo="Historial por equipo"
+            descripcion="Todas las asignaciones de un equipo. Dejar vacío para obtener todas."
           >
-            <CardContent sx={{ p: 3 }}>
-              <Typography variant="h6" fontWeight={600}>
-                Historial por usuario
-              </Typography>
-              <Typography variant="body2" color="text.secondary" mt={0.5}>
-                Asignaciones realizadas por un usuario del sistema.
-              </Typography>
-              <Divider sx={{ my: 2 }} />
-              <TextField
-                fullWidth
-                size="small"
-                label="Nombre del usuario"
-                value={usuario}
-                onChange={(e) => setUsuario(e.target.value)}
-              />
-              <BotonesExportar tipo="historialUsuario" />
-            </CardContent>
-          </Card>
+            <TextField
+              fullWidth
+              size="small"
+              label="Marca, modelo o serie"
+              value={equipo}
+              onChange={(e) => setEquipo(e.target.value)}
+            />
+          </ReporteCard>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 4 }}>
+          <ReporteCard
+            tipo="historialUsuario"
+            titulo="Historial por usuario"
+            descripcion="Asignaciones realizadas por un usuario del sistema."
+          >
+            <TextField
+              fullWidth
+              size="small"
+              label="Nombre del usuario"
+              value={usuario}
+              onChange={(e) => setUsuario(e.target.value)}
+            />
+          </ReporteCard>
         </Grid>
       </Grid>
     </Box>
