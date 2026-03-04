@@ -23,6 +23,8 @@ import UndoIcon from "@mui/icons-material/Undo";
 import UploadIcon from "@mui/icons-material/Upload";
 import MainCard from "../../components/MainCard";
 import api from "../../services/api";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 
 export default function Asignaciones() {
   const [asignaciones, setAsignaciones] = useState([]);
@@ -61,6 +63,13 @@ export default function Asignaciones() {
   useEffect(() => {
     cargarDatos();
   }, []);
+
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(""), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
 
   const handleGuardar = async () => {
     try {
@@ -104,8 +113,77 @@ export default function Asignaciones() {
     setDevolucionOpen(true);
   };
 
+  const limpiarNombre = (texto) => {
+    return texto
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, "_");
+  };
+
+  const generarPDF = async (asignacion) => {
+    try {
+      const res = await api.get(`/pdf/constancia/${asignacion.id}`, {
+        responseType: "blob",
+      });
+      const url = window.URL.createObjectURL(
+        new Blob([res.data], { type: "application/pdf" }),
+      );
+      const link = document.createElement("a");
+      link.href = url;
+      const nombreArchivo = `constancia_${limpiarNombre(asignacion.persona_nombre)}_${new Date(asignacion.fecha_asignacion).toLocaleDateString("es-HN").replace(/\//g, "-")}.pdf`;
+      link.setAttribute("download", nombreArchivo);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      setError("Error al generar el PDF");
+    }
+  };
+
+  const subirDocumento = async (asignacion, archivo) => {
+    try {
+      const formData = new FormData();
+      formData.append("documento", archivo);
+      await api.post(`/asignaciones/${asignacion.id}/documento`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      cargarDatos();
+    } catch {
+      setError("Error al subir el documento");
+    }
+  };
+
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState("");
+
+  const previsualizarDocumento = async (asignacion) => {
+    try {
+      const res = await api.get(
+        `/asignaciones/${asignacion.id}/documento/verificar`,
+      );
+      console.log("Respuesta:", res.data);
+      if (!res.data.existe) {
+        setError(
+          "El documento no se encontró en el servidor. Por favor sube el documento firmado nuevamente.",
+        );
+        return;
+      }
+      setPreviewUrl(res.data.url);
+      setPreviewOpen(true);
+    } catch (err) {
+      console.log("Error:", err);
+      setError("No se pudo verificar el documento.");
+    }
+  };
+
   return (
     <Box>
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>
+          {error}
+        </Alert>
+      )}
       <Box
         sx={{
           display: "flex",
@@ -219,11 +297,45 @@ export default function Asignaciones() {
                           </IconButton>
                         </Tooltip>
                       )}
-                      <Tooltip title="Subir documento firmado">
-                        <IconButton size="small">
+                      <Tooltip title="Generar constancia PDF">
+                        <IconButton size="small" onClick={() => generarPDF(a)}>
+                          <PictureAsPdfIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip
+                        title={
+                          a.documento_firmado
+                            ? "Documento firmado subido"
+                            : "Subir documento firmado"
+                        }
+                      >
+                        <IconButton
+                          size="small"
+                          color={a.documento_firmado ? "success" : "default"}
+                          onClick={() => {
+                            const input = document.createElement("input");
+                            input.type = "file";
+                            input.accept = ".pdf,.jpg,.jpeg,.png";
+                            input.onchange = (e) => {
+                              if (e.target.files[0])
+                                subirDocumento(a, e.target.files[0]);
+                            };
+                            input.click();
+                          }}
+                        >
                           <UploadIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
+                      {a.documento_firmado && (
+                        <Tooltip title="Ver documento firmado">
+                          <IconButton
+                            size="small"
+                            onClick={() => previsualizarDocumento(a)}
+                          >
+                            <VisibilityIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))
@@ -327,6 +439,29 @@ export default function Asignaciones() {
             onClick={handleDevolucion}
           >
             Confirmar devolución
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Documento firmado</DialogTitle>
+        <DialogContent sx={{ p: 0, height: "70vh" }}>
+          <iframe
+            src={previewUrl}
+            width="100%"
+            height="100%"
+            style={{ border: "none" }}
+            title="Documento firmado"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPreviewOpen(false)}>Cerrar</Button>
+          <Button variant="contained" href={previewUrl} target="_blank">
+            Abrir en nueva pestaña
           </Button>
         </DialogActions>
       </Dialog>
