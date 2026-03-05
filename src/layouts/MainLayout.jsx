@@ -116,30 +116,49 @@ export default function MainLayout() {
       }}
     >
       {/* Logo */}
-      <Box sx={{ px: 3, py: 3, borderBottom: "1px solid #ffffff0f" }}>
-        <Typography
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1.5,
+          px: 3,
+          py: 3,
+          borderBottom: "1px solid #ffffff0f",
+        }}
+      >
+        <img src="/it-assets.svg" alt="IT Assets" style={{ height: 50}} />
+        <Box
           sx={{
-            fontFamily: "'Outfit', sans-serif",
-            fontWeight: 700,
-            fontSize: "1.1rem",
-            color: "white",
-            letterSpacing: "-0.3px",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
           }}
         >
-          IT Assets
-        </Typography>
-        <Typography
-          sx={{
-            fontSize: "0.65rem",
-            color: "#e8a838",
-            letterSpacing: "2px",
-            textTransform: "uppercase",
-            mt: 0.3,
-            fontFamily: "'DM Sans', sans-serif",
-          }}
-        >
-          Madeyso
-        </Typography>
+          <Typography
+            sx={{
+              fontFamily: "'Outfit', sans-serif",
+              fontWeight: 700,
+              fontSize: "1.1rem",
+              color: "white",
+              letterSpacing: "-0.3px",
+              lineHeight: 1,
+            }}
+          >
+            IT Assets
+          </Typography>
+          <Typography
+            sx={{
+              fontSize: "0.65rem",
+              color: "#e8a838",
+              letterSpacing: "2px",
+              textTransform: "uppercase",
+              mt: 0.3,
+              fontFamily: "'DM Sans', sans-serif",
+            }}
+          >
+            Madeyso
+          </Typography>
+        </Box>
       </Box>
 
       {/* Nav */}
