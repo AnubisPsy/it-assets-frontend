@@ -16,6 +16,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import TextField from "@mui/material/TextField";
+import MenuItem from "@mui/material/MenuItem";
 import Alert from "@mui/material/Alert";
 import Card from "@mui/material/Card";
 import AddIcon from "@mui/icons-material/Add";
@@ -32,7 +33,17 @@ const estadoColor = {
   baja: "error",
 };
 
+const CAMPOS_CONFIG = [
+  { key: "marca", label: "Marca" },
+  { key: "modelo", label: "Modelo" },
+  { key: "serie", label: "Serie" },
+  { key: "procesador", label: "Procesador" },
+  { key: "ram", label: "RAM" },
+  { key: "descripcion", label: "Descripción" },
+];
+
 const formVacio = {
+  tipo_id: "",
   marca: "",
   modelo: "",
   serie: "",
@@ -58,6 +69,7 @@ const SCRIPT_RAW = `$cs   = Get-CimInstance Win32_ComputerSystem\n$bios = Get-Ci
 
 export default function Equipos() {
   const [equipos, setEquipos] = useState([]);
+  const [tipos, setTipos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(formVacio);
@@ -71,19 +83,26 @@ export default function Equipos() {
   const [historial, setHistorial] = useState([]);
   const [equipoActual, setEquipoActual] = useState(null);
 
-  const cargarEquipos = async () => {
+  const tipoSeleccionado = tipos.find((t) => t.id === Number(form.tipo_id));
+  const camposActivos = tipoSeleccionado ? tipoSeleccionado.campos : [];
+
+  const cargarDatos = async () => {
     try {
-      const res = await api.get("/equipos");
-      setEquipos(res.data);
+      const [resEquipos, resTipos] = await Promise.all([
+        api.get("/equipos"),
+        api.get("/tipos-equipo"),
+      ]);
+      setEquipos(resEquipos.data);
+      setTipos(resTipos.data);
     } catch {
-      setError("Error al cargar equipos");
+      setError("Error al cargar datos");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    cargarEquipos();
+    cargarDatos();
   }, []);
 
   const handleAbrir = (equipo = null) => {
@@ -91,9 +110,10 @@ export default function Equipos() {
     setForm(
       equipo
         ? {
-            marca: equipo.marca,
-            modelo: equipo.modelo,
-            serie: equipo.serie,
+            tipo_id: equipo.tipo_id || "",
+            marca: equipo.marca || "",
+            modelo: equipo.modelo || "",
+            serie: equipo.serie || "",
             procesador: equipo.procesador || "",
             ram: equipo.ram || "",
             descripcion: equipo.descripcion || "",
@@ -107,13 +127,23 @@ export default function Equipos() {
 
   const handleGuardar = async () => {
     try {
+      const tipo = tipos.find((t) => t.id === Number(form.tipo_id));
+      const camposPermitidos = tipo ? tipo.campos : [];
+
+      const payload = { tipo_id: form.tipo_id };
+      camposPermitidos.forEach((campo) => {
+        payload[campo] = form[campo] || null;
+      });
+
       if (editando) {
-        await api.put(`/equipos/${editando.id}`, form);
+        payload.estado = form.estado;
+        await api.put(`/equipos/${editando.id}`, payload);
       } else {
-        await api.post("/equipos", form);
+        await api.post("/equipos", payload);
       }
+
       setDialogOpen(false);
-      cargarEquipos();
+      cargarDatos();
     } catch (err) {
       setError(err.response?.data?.error || "Error al guardar");
     }
@@ -122,14 +152,15 @@ export default function Equipos() {
   const handleImportar = () => {
     try {
       const datos = JSON.parse(importTexto);
-      setForm({
+      setForm((prev) => ({
+        ...prev,
         marca: datos.marca || "",
         modelo: datos.modelo || "",
         serie: datos.serie || "",
         procesador: datos.procesador || "",
         ram: datos.ram || "",
         descripcion: datos.descripcion || "",
-      });
+      }));
       setImportOpen(false);
       setEditando(null);
       setError("");
@@ -164,6 +195,22 @@ export default function Equipos() {
     link.download = "equipo_info.ps1";
     link.click();
     URL.revokeObjectURL(url);
+  };
+
+  const renderCampo = (key, label, opciones = {}) => {
+    if (!camposActivos.includes(key)) return null;
+    return (
+      <TextField
+        key={key}
+        fullWidth
+        label={label}
+        value={form[key] || ""}
+        onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+        multiline={key === "descripcion"}
+        rows={key === "descripcion" ? 2 : undefined}
+        {...opciones}
+      />
+    );
   };
 
   return (
@@ -216,6 +263,9 @@ export default function Equipos() {
             <TableHead>
               <TableRow sx={{ bgcolor: "background.default" }}>
                 <TableCell>
+                  <Typography variant="subtitle1">Tipo</Typography>
+                </TableCell>
+                <TableCell>
                   <Typography variant="subtitle1">Marca / Modelo</Typography>
                 </TableCell>
                 <TableCell>
@@ -238,7 +288,7 @@ export default function Equipos() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center">
+                  <TableCell colSpan={7} align="center">
                     <Typography variant="body2" color="text.secondary">
                       Cargando...
                     </Typography>
@@ -246,7 +296,7 @@ export default function Equipos() {
                 </TableRow>
               ) : equipos.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center">
+                  <TableCell colSpan={7} align="center">
                     <Typography variant="body2" color="text.secondary">
                       No hay equipos registrados
                     </Typography>
@@ -255,6 +305,12 @@ export default function Equipos() {
               ) : (
                 equipos.map((equipo) => (
                   <TableRow key={equipo.id} hover>
+                    <TableCell>
+                      <Typography variant="body2" color="text.secondary">
+                        {tipos.find((t) => t.id === equipo.tipo_id)?.nombre ||
+                          "—"}
+                      </Typography>
+                    </TableCell>
                     <TableCell>
                       <Typography
                         variant="body1"
@@ -332,65 +388,50 @@ export default function Equipos() {
         <DialogContent>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
             {error && <Alert severity="error">{error}</Alert>}
-            <Box sx={{ display: "flex", gap: 2 }}>
-              <TextField
-                fullWidth
-                label="Marca"
-                value={form.marca}
-                onChange={(e) => setForm({ ...form, marca: e.target.value })}
-              />
-              <TextField
-                fullWidth
-                label="Modelo"
-                value={form.modelo}
-                onChange={(e) => setForm({ ...form, modelo: e.target.value })}
-              />
-            </Box>
+
             <TextField
+              select
               fullWidth
-              label="Serie"
-              value={form.serie}
-              onChange={(e) => setForm({ ...form, serie: e.target.value })}
-            />
-            <Box sx={{ display: "flex", gap: 2 }}>
-              <TextField
-                fullWidth
-                label="Procesador"
-                value={form.procesador}
-                onChange={(e) =>
-                  setForm({ ...form, procesador: e.target.value })
-                }
-              />
-              <TextField
-                fullWidth
-                label="RAM"
-                value={form.ram}
-                onChange={(e) => setForm({ ...form, ram: e.target.value })}
-              />
-            </Box>
-            <TextField
-              fullWidth
-              label="Descripción"
-              multiline
-              rows={2}
-              value={form.descripcion}
-              onChange={(e) =>
-                setForm({ ...form, descripcion: e.target.value })
-              }
-            />
-            {editando && (
-              <TextField
-                fullWidth
-                select
-                label="Estado"
-                value={form.estado}
-                onChange={(e) => setForm({ ...form, estado: e.target.value })}
-                slotProps={{ select: { native: true } }}
-              >
-                <option value="disponible">Disponible</option>
-                <option value="asignado">Asignado</option>
-                <option value="baja">Baja</option>
-              </TextField>
+              label="Tipo de equipo"
+              value={form.tipo_id}
+              onChange={(e) => setForm({ ...form, tipo_id: e.target.value })}
+            >
+              {tipos.map((tipo) => (
+                <MenuItem key={tipo.id} value={tipo.id}>
+                  {tipo.nombre}
+                </MenuItem>
+              ))}
+            </TextField>
+
+            {form.tipo_id && (
+              <>
+                <Box sx={{ display: "flex", gap: 2 }}>
+                  {renderCampo("marca", "Marca")}
+                  {renderCampo("modelo", "Modelo")}
+                </Box>
+                {renderCampo("serie", "Serie")}
+                <Box sx={{ display: "flex", gap: 2 }}>
+                  {renderCampo("procesador", "Procesador")}
+                  {renderCampo("ram", "RAM")}
+                </Box>
+                {renderCampo("descripcion", "Descripción")}
+
+                {editando && (
+                  <TextField
+                    select
+                    fullWidth
+                    label="Estado"
+                    value={form.estado}
+                    onChange={(e) =>
+                      setForm({ ...form, estado: e.target.value })
+                    }
+                  >
+                    <MenuItem value="disponible">Disponible</MenuItem>
+                    <MenuItem value="asignado">Asignado</MenuItem>
+                    <MenuItem value="baja">Baja</MenuItem>
+                  </TextField>
+                )}
+              </>
             )}
           </Box>
         </DialogContent>

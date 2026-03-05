@@ -521,7 +521,9 @@ export default function Asignaciones() {
             {error && <Alert severity="error">{error}</Alert>}
             <Autocomplete
               options={equipos}
-              getOptionLabel={(e) => `${e.marca} ${e.modelo} — ${e.serie}`}
+              getOptionLabel={(e) =>
+                `[${e.tipo_nombre || "Sin tipo"}] ${e.marca} ${e.modelo} — ${e.serie}`
+              }
               value={form.equipo_id}
               onChange={(_, val) => setForm({ ...form, equipo_id: val })}
               renderInput={(params) => <TextField {...params} label="Equipo" />}

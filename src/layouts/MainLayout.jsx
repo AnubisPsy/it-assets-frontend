@@ -20,6 +20,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
 import Avatar from "@mui/material/Avatar";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import DevicesIcon from "@mui/icons-material/Devices";
 
 const BASE_URL = "http://localhost:3000";
 
@@ -64,6 +65,11 @@ const menuItems = [
   {
     section: "Sistema",
     items: [
+      {
+        label: "Tipos de equipos",
+        icon: <DevicesIcon fontSize="small" />,
+        path: "/tipos-equipos",
+      },
       {
         label: "Usuarios",
         icon: <ManageAccountsIcon fontSize="small" />,
@@ -126,7 +132,7 @@ export default function MainLayout() {
           borderBottom: "1px solid #ffffff0f",
         }}
       >
-        <img src="/it-assets.svg" alt="IT Assets" style={{ height: 50}} />
+        <img src="/it-assets.svg" alt="IT Assets" style={{ height: 50 }} />
         <Box
           sx={{
             display: "flex",
