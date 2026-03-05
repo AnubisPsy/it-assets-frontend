@@ -21,6 +21,9 @@ import Card from "@mui/material/Card";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import api from "../../services/api";
+import Avatar from "@mui/material/Avatar";
+
+const BASE_URL = "http://localhost:3000";
 
 const formVacio = { nombre: "", usuario: "", password: "" };
 
@@ -149,30 +152,31 @@ export default function Usuarios() {
                       <Box
                         sx={{ display: "flex", alignItems: "center", gap: 1.5 }}
                       >
-                        <Box
+                        <Avatar
+                          src={
+                            u.foto_perfil
+                              ? `${BASE_URL}/uploads/fotos/${u.foto_perfil}`
+                              : undefined
+                          }
                           sx={{
                             width: 32,
                             height: 32,
                             borderRadius: 2,
                             background:
                               "linear-gradient(135deg, #4d8ef5, #7c3aed)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
                             fontSize: "0.7rem",
                             fontWeight: 700,
-                            color: "white",
-                            flexShrink: 0,
                             fontFamily: "'DM Sans', sans-serif",
                           }}
                         >
-                          {u.nombre
-                            .split(" ")
-                            .map((n) => n[0])
-                            .slice(0, 2)
-                            .join("")
-                            .toUpperCase()}
-                        </Box>
+                          {!u.foto_perfil &&
+                            u.nombre
+                              .split(" ")
+                              .map((n) => n[0])
+                              .slice(0, 2)
+                              .join("")
+                              .toUpperCase()}
+                        </Avatar>
                         <Typography
                           variant="body1"
                           fontWeight={600}
