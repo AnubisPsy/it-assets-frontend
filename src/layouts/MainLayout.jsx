@@ -14,6 +14,7 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import LaptopIcon from "@mui/icons-material/Laptop";
 import PeopleIcon from "@mui/icons-material/People";
 import AssignmentIcon from "@mui/icons-material/Assignment";
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong'
 import SummarizeIcon from "@mui/icons-material/Summarize";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 import LogoutIcon from "@mui/icons-material/Logout";
@@ -59,6 +60,11 @@ const menuItems = [
         label: "Reportes",
         icon: <SummarizeIcon fontSize="small" />,
         path: "/reportes",
+      },
+            {
+        label: "Insumos",
+        icon: <ReceiptLongIcon fontSize="small" />,
+        path: "/insumos",
       },
     ],
   },
