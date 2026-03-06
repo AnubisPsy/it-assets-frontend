@@ -39,6 +39,7 @@ const CAMPOS_CONFIG = [
   { key: "serie", label: "Serie" },
   { key: "procesador", label: "Procesador" },
   { key: "ram", label: "RAM" },
+  { key: "mac", label: "MAC" },
   { key: "descripcion", label: "Descripción" },
 ];
 
@@ -49,6 +50,7 @@ const formVacio = {
   serie: "",
   procesador: "",
   ram: "",
+  mac: "",
   descripcion: "",
 };
 
@@ -82,6 +84,7 @@ export default function Equipos() {
   const [historialOpen, setHistorialOpen] = useState(false);
   const [historial, setHistorial] = useState([]);
   const [equipoActual, setEquipoActual] = useState(null);
+  const [tipoFiltro, setTipoFiltro] = useState("");
 
   const tipoSeleccionado = tipos.find((t) => t.id === Number(form.tipo_id));
   const camposActivos = tipoSeleccionado ? tipoSeleccionado.campos : [];
@@ -154,6 +157,7 @@ export default function Equipos() {
       const datos = JSON.parse(importTexto);
       setForm((prev) => ({
         ...prev,
+        mac: datos.mac || "",
         marca: datos.marca || "",
         modelo: datos.modelo || "",
         serie: datos.serie || "",
@@ -213,6 +217,25 @@ export default function Equipos() {
     );
   };
 
+  const equiposFiltrados = tipoFiltro
+    ? equipos.filter((e) => String(e.tipo_id) === String(tipoFiltro))
+    : equipos;
+
+  const tipoActivo = tipos.find((t) => t.id === Number(tipoFiltro));
+  const columnasDinamicas = tipoActivo ? tipoActivo.campos : [];
+
+  console.log("tipoFiltro:", tipoFiltro, typeof tipoFiltro);
+  console.log(
+    "primer equipo tipo_id:",
+    equipos[0]?.tipo_id,
+    typeof equipos[0]?.tipo_id,
+  );
+
+  console.log(
+    "equiposFiltrados:",
+    equiposFiltrados.map((e) => e.tipo_id),
+  );
+
   return (
     <Box>
       {error && (
@@ -229,7 +252,9 @@ export default function Equipos() {
           mb: 3,
         }}
       >
-        <Typography variant="h4">Equipos</Typography>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Typography variant="h4">Equipos</Typography>
+        </Box>
         <Box sx={{ display: "flex", gap: 1 }}>
           <Button
             variant="outlined"
@@ -263,20 +288,42 @@ export default function Equipos() {
             <TableHead>
               <TableRow sx={{ bgcolor: "background.default" }}>
                 <TableCell>
-                  <Typography variant="subtitle1">Tipo</Typography>
+                  <TextField
+                    select
+                    size="small"
+                    value={tipoFiltro}
+                    onChange={(e) => setTipoFiltro(e.target.value)}
+                    variant="standard"
+                    sx={{ minWidth: 130 }}
+                    SelectProps={{ displayEmpty: true }}
+                  >
+                    <MenuItem value="">Tipo</MenuItem>
+                    {tipos.map((tipo) => (
+                      <MenuItem key={tipo.id} value={tipo.id}>
+                        {tipo.nombre}
+                      </MenuItem>
+                    ))}
+                  </TextField>
                 </TableCell>
                 <TableCell>
                   <Typography variant="subtitle1">Marca / Modelo</Typography>
                 </TableCell>
-                <TableCell>
-                  <Typography variant="subtitle1">Serie</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="subtitle1">Procesador</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="subtitle1">RAM</Typography>
-                </TableCell>
+                {tipoFiltro ? (
+                  columnasDinamicas
+                    .filter((c) => c !== "marca" && c !== "modelo")
+                    .map((campo) => (
+                      <TableCell key={campo}>
+                        <Typography variant="subtitle1">
+                          {CAMPOS_CONFIG.find((c) => c.key === campo)?.label ||
+                            campo}
+                        </Typography>
+                      </TableCell>
+                    ))
+                ) : (
+                  <TableCell>
+                    <Typography variant="subtitle1">Serie</Typography>
+                  </TableCell>
+                )}
                 <TableCell>
                   <Typography variant="subtitle1">Estado</Typography>
                 </TableCell>
@@ -288,22 +335,28 @@ export default function Equipos() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={7} align="center">
+                  <TableCell
+                    colSpan={tipoFiltro ? columnasDinamicas.length + 2 : 5}
+                    align="center"
+                  >
                     <Typography variant="body2" color="text.secondary">
                       Cargando...
                     </Typography>
                   </TableCell>
                 </TableRow>
-              ) : equipos.length === 0 ? (
+              ) : equiposFiltrados.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} align="center">
+                  <TableCell
+                    colSpan={tipoFiltro ? columnasDinamicas.length + 2 : 5}
+                    align="center"
+                  >
                     <Typography variant="body2" color="text.secondary">
                       No hay equipos registrados
                     </Typography>
                   </TableCell>
                 </TableRow>
               ) : (
-                equipos.map((equipo) => (
+                equiposFiltrados.map((equipo) => (
                   <TableRow key={equipo.id} hover>
                     <TableCell>
                       <Typography variant="body2" color="text.secondary">
@@ -323,27 +376,39 @@ export default function Equipos() {
                         {equipo.modelo}
                       </Typography>
                     </TableCell>
-                    <TableCell>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          fontFamily: "'DM Mono', monospace",
-                          fontSize: "0.75rem",
-                        }}
-                      >
-                        {equipo.serie}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">
-                        {equipo.procesador || "—"}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">
-                        {equipo.ram || "—"}
-                      </Typography>
-                    </TableCell>
+                    {tipoFiltro ? (
+                      columnasDinamicas
+                        .filter((c) => c !== "marca" && c !== "modelo")
+                        .map((campo) => (
+                          <TableCell key={campo}>
+                            <Typography
+                              variant="body2"
+                              sx={
+                                campo === "serie" || campo === "mac"
+                                  ? {
+                                      fontFamily: "'DM Mono', monospace",
+                                      fontSize: "0.75rem",
+                                    }
+                                  : {}
+                              }
+                            >
+                              {equipo[campo] || "—"}
+                            </Typography>
+                          </TableCell>
+                        ))
+                    ) : (
+                      <TableCell>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontFamily: "'DM Mono', monospace",
+                            fontSize: "0.75rem",
+                          }}
+                        >
+                          {equipo.serie || "—"}
+                        </Typography>
+                      </TableCell>
+                    )}
                     <TableCell>
                       <Chip
                         label={equipo.estado}
@@ -414,6 +479,7 @@ export default function Equipos() {
                   {renderCampo("procesador", "Procesador")}
                   {renderCampo("ram", "RAM")}
                 </Box>
+                {renderCampo("mac", "MAC")}
                 {renderCampo("descripcion", "Descripción")}
 
                 {editando && (

@@ -24,6 +24,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import api from "../../services/api";
 
 const CAMPOS_DISPONIBLES = [
+  { key: "mac", label: "MAC" },
   { key: "marca", label: "Marca" },
   { key: "modelo", label: "Modelo" },
   { key: "serie", label: "Serie" },
