@@ -14,7 +14,7 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import LaptopIcon from "@mui/icons-material/Laptop";
 import PeopleIcon from "@mui/icons-material/People";
 import AssignmentIcon from "@mui/icons-material/Assignment";
-import ReceiptLongIcon from '@mui/icons-material/ReceiptLong'
+import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import SummarizeIcon from "@mui/icons-material/Summarize";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 import LogoutIcon from "@mui/icons-material/Logout";
@@ -22,6 +22,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import Avatar from "@mui/material/Avatar";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import DevicesIcon from "@mui/icons-material/Devices";
+import DnsIcon from "@mui/icons-material/Dns";
 
 const BASE_URL = "http://localhost:3000";
 
@@ -71,6 +72,11 @@ const menuItems = [
   {
     section: "Sistema",
     items: [
+      {
+        label: "Servidores",
+        icon: <DnsIcon fontSize="small" />,
+        path: "/servidores",
+      },
       {
         label: "Tipos de equipos",
         icon: <DevicesIcon fontSize="small" />,

@@ -12,6 +12,7 @@ import Dashboard from "./pages/dashboard/Dashboard";
 import Reportes from "./pages/reportes/Reportes";
 import Perfil from "./pages/perfil/Perfil";
 import TiposEquipo from "./pages/tipos-equipos/TiposEquipos";
+import Servidores from "./pages/servidores/Servidores";
 
 const isAuthenticated = () => !!localStorage.getItem("token");
 
@@ -47,6 +48,8 @@ export default function App() {
         <Route path="/perfil" element={<Perfil />} />
         <Route path="/compras" element={<Compras />} />
         <Route path="/tipos-equipos" element={<TiposEquipo />} />
+        <Route path="/servidores" element={<Servidores />} />
+
       </Route>
 
       <Route path="*" element={<Navigate to="/" />} />
