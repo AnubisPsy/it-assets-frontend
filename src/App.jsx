@@ -7,6 +7,7 @@ import Equipos from "./pages/equipos/Equipos";
 import Personas from "./pages/personas/Personas";
 import Asignaciones from "./pages/asignaciones/Asignaciones";
 import Usuarios from "./pages/usuarios/Usuarios";
+import Compras from "./pages/insumos/compras";
 import Dashboard from "./pages/dashboard/Dashboard";
 import Reportes from "./pages/reportes/Reportes";
 import Perfil from "./pages/perfil/Perfil";
@@ -45,6 +46,7 @@ export default function App() {
         <Route path="/usuarios" element={<Usuarios />} />
         <Route path="/reportes" element={<Reportes />} />
         <Route path="/perfil" element={<Perfil />} />
+        <Route path="/compras" element={<Compras />} />
         <Route path="/tipos-equipos" element={<TiposEquipo />} />
         <Route path="/servidores" element={<Servidores />} />
 
