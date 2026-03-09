@@ -62,9 +62,9 @@ const menuItems = [
         path: "/reportes",
       },
             {
-        label: "Insumos",
+        label: "Compras",
         icon: <ReceiptLongIcon fontSize="small" />,
-        path: "/insumos",
+        path: "/compras",
       },
     ],
   },
