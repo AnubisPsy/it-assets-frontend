@@ -72,6 +72,7 @@ const SCRIPT_RAW = `$cs   = Get-CimInstance Win32_ComputerSystem\n$bios = Get-Ci
 export default function Equipos() {
   const [equipos, setEquipos] = useState([]);
   const [tipos, setTipos] = useState([]);
+  const [estados, setEstados] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(formVacio);
@@ -91,12 +92,14 @@ export default function Equipos() {
 
   const cargarDatos = async () => {
     try {
-      const [resEquipos, resTipos] = await Promise.all([
+      const [resEquipos, resTipos, resEstados] = await Promise.all([
         api.get("/equipos"),
         api.get("/tipos-equipo"),
+        api.get("/equipos/estados"),
       ]);
       setEquipos(resEquipos.data);
       setTipos(resTipos.data);
+      setEstados(resEstados.data);
     } catch {
       setError("Error al cargar datos");
     } finally {
@@ -120,7 +123,8 @@ export default function Equipos() {
             procesador: equipo.procesador || "",
             ram: equipo.ram || "",
             descripcion: equipo.descripcion || "",
-            estado: equipo.estado,
+            mac: equipo.mac || "",
+            estado_id: equipo.estado_id,
           }
         : formVacio,
     );
@@ -139,7 +143,7 @@ export default function Equipos() {
       });
 
       if (editando) {
-        payload.estado = form.estado;
+        payload.estado_id = form.estado_id;
         await api.put(`/equipos/${editando.id}`, payload);
       } else {
         await api.post("/equipos", payload);
@@ -224,18 +228,6 @@ export default function Equipos() {
   const tipoActivo = tipos.find((t) => t.id === Number(tipoFiltro));
   const columnasDinamicas = tipoActivo ? tipoActivo.campos : [];
 
-  console.log("tipoFiltro:", tipoFiltro, typeof tipoFiltro);
-  console.log(
-    "primer equipo tipo_id:",
-    equipos[0]?.tipo_id,
-    typeof equipos[0]?.tipo_id,
-  );
-
-  console.log(
-    "equiposFiltrados:",
-    equiposFiltrados.map((e) => e.tipo_id),
-  );
-
   return (
     <Box>
       {error && (
@@ -252,9 +244,7 @@ export default function Equipos() {
           mb: 3,
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <Typography variant="h4">Equipos</Typography>
-        </Box>
+        <Typography variant="h4">Equipos</Typography>
         <Box sx={{ display: "flex", gap: 1 }}>
           <Button
             variant="outlined"
@@ -453,7 +443,6 @@ export default function Equipos() {
         <DialogContent>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
             {error && <Alert severity="error">{error}</Alert>}
-
             <TextField
               select
               fullWidth
@@ -487,14 +476,16 @@ export default function Equipos() {
                     select
                     fullWidth
                     label="Estado"
-                    value={form.estado}
+                    value={form.estado_id || ""}
                     onChange={(e) =>
-                      setForm({ ...form, estado: e.target.value })
+                      setForm({ ...form, estado_id: e.target.value })
                     }
                   >
-                    <MenuItem value="disponible">Disponible</MenuItem>
-                    <MenuItem value="asignado">Asignado</MenuItem>
-                    <MenuItem value="baja">Baja</MenuItem>
+                    {estados.map((e) => (
+                      <MenuItem key={e.id} value={e.id}>
+                        {e.descripcion}
+                      </MenuItem>
+                    ))}
                   </TextField>
                 )}
               </>

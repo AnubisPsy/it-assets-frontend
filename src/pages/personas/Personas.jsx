@@ -16,6 +16,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import TextField from "@mui/material/TextField";
+import MenuItem from "@mui/material/MenuItem";
 import Alert from "@mui/material/Alert";
 import Card from "@mui/material/Card";
 import AddIcon from "@mui/icons-material/Add";
@@ -23,10 +24,11 @@ import EditIcon from "@mui/icons-material/Edit";
 import LaptopIcon from "@mui/icons-material/Laptop";
 import api from "../../services/api";
 
-const formVacio = { nombre: "", numero_identidad: "", departamento: "" };
+const formVacio = { nombre: "", numero_identidad: "", departamento_id: "" };
 
 export default function Personas() {
   const [personas, setPersonas] = useState([]);
+  const [departamentos, setDepartamentos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(formVacio);
@@ -49,6 +51,9 @@ export default function Personas() {
 
   useEffect(() => {
     cargarPersonas();
+    api
+      .get("/personas/departamentos")
+      .then((res) => setDepartamentos(res.data));
   }, []);
 
   const handleAbrir = (persona = null) => {
@@ -58,7 +63,7 @@ export default function Personas() {
         ? {
             nombre: persona.nombre,
             numero_identidad: persona.numero_identidad,
-            departamento: persona.departamento,
+            departamento_id: persona.departamento_id,
             activo: persona.activo,
           }
         : formVacio,
@@ -249,12 +254,19 @@ export default function Personas() {
             />
             <TextField
               fullWidth
+              select
               label="Departamento"
-              value={form.departamento}
+              value={form.departamento_id}
               onChange={(e) =>
-                setForm({ ...form, departamento: e.target.value })
+                setForm({ ...form, departamento_id: e.target.value })
               }
-            />
+            >
+              {departamentos.map((d) => (
+                <MenuItem key={d.id} value={d.id}>
+                  {d.nombre}
+                </MenuItem>
+              ))}
+            </TextField>
             {editando && (
               <TextField
                 fullWidth
@@ -264,10 +276,9 @@ export default function Personas() {
                 onChange={(e) =>
                   setForm({ ...form, activo: e.target.value === "true" })
                 }
-                slotProps={{ select: { native: true } }}
               >
-                <option value="true">Activo</option>
-                <option value="false">Inactivo</option>
+                <MenuItem value="true">Activo</MenuItem>
+                <MenuItem value="false">Inactivo</MenuItem>
               </TextField>
             )}
           </Box>
