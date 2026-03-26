@@ -61,7 +61,7 @@ export default function Compras() {
       const [resCompras, resEquipos, resEstados] = await Promise.all([
         api.get("/compras"),
         api.get("/equipos"),
-        api.get("/estados"),
+        api.get("/compras/estados"),
       ]);
       setCompras(resCompras.data);
       // Defensive: handle both array and wrapped responses
