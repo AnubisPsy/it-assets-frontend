@@ -23,6 +23,8 @@ import Avatar from "@mui/material/Avatar";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import DevicesIcon from "@mui/icons-material/Devices";
 import DnsIcon from "@mui/icons-material/Dns";
+import InventoryIcon from "@mui/icons-material/Inventory";
+import CategoryIcon from "@mui/icons-material/Category";
 
 const BASE_URL = "http://localhost:3000";
 
@@ -58,11 +60,21 @@ const menuItems = [
         path: "/asignaciones",
       },
       {
+        label: "Inventario",
+        icon: <InventoryIcon fontSize="small" />,
+        path: "/inventario",
+      },
+      {
+        label: "Insumos",
+        icon: <CategoryIcon fontSize="small" />,
+        path: "/insumos",
+      },
+      {
         label: "Reportes",
         icon: <SummarizeIcon fontSize="small" />,
         path: "/reportes",
       },
-            {
+      {
         label: "Compras",
         icon: <ReceiptLongIcon fontSize="small" />,
         path: "/compras",

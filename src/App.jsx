@@ -7,12 +7,14 @@ import Equipos from "./pages/equipos/Equipos";
 import Personas from "./pages/personas/Personas";
 import Asignaciones from "./pages/asignaciones/Asignaciones";
 import Usuarios from "./pages/usuarios/Usuarios";
-import Compras from "./pages/insumos/compras";
+import Compras from "./pages/compras/Compras";
 import Dashboard from "./pages/dashboard/Dashboard";
 import Reportes from "./pages/reportes/Reportes";
 import Perfil from "./pages/perfil/Perfil";
 import TiposEquipo from "./pages/tipos-equipos/TiposEquipos";
 import Servidores from "./pages/servidores/Servidores";
+import Insumos from "./pages/insumos/Insumos";
+import Inventario from "./pages/inventario/Inventario";
 
 const isAuthenticated = () => !!localStorage.getItem("token");
 
@@ -49,7 +51,8 @@ export default function App() {
         <Route path="/compras" element={<Compras />} />
         <Route path="/tipos-equipos" element={<TiposEquipo />} />
         <Route path="/servidores" element={<Servidores />} />
-
+        <Route path="/insumos" element={<Insumos />} />
+        <Route path="/inventario" element={<Inventario />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" />} />

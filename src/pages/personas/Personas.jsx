@@ -37,6 +37,9 @@ export default function Personas() {
   const [historialOpen, setHistorialOpen] = useState(false);
   const [historial, setHistorial] = useState([]);
   const [personaActual, setPersonaActual] = useState(null);
+  const [nuevoDpto, setNuevoDpto] = useState(false);
+  const [nombreDpto, setNombreDpto] = useState("");
+  const [errorDpto, setErrorDpto] = useState("");
 
   const cargarPersonas = async () => {
     try {
@@ -252,21 +255,84 @@ export default function Personas() {
                 setForm({ ...form, numero_identidad: e.target.value })
               }
             />
-            <TextField
-              fullWidth
-              select
-              label="Departamento"
-              value={form.departamento_id}
-              onChange={(e) =>
-                setForm({ ...form, departamento_id: e.target.value })
-              }
-            >
-              {departamentos.map((d) => (
-                <MenuItem key={d.id} value={d.id}>
-                  {d.nombre}
-                </MenuItem>
-              ))}
-            </TextField>
+            {!nuevoDpto ? (
+              <Box sx={{ display: "flex", gap: 1 }}>
+                <TextField
+                  select
+                  fullWidth
+                  label="Departamento"
+                  value={form.departamento_id}
+                  onChange={(e) =>
+                    setForm({ ...form, departamento_id: e.target.value })
+                  }
+                >
+                  {departamentos.map((d) => (
+                    <MenuItem key={d.id} value={d.id}>
+                      {d.nombre}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => {
+                    setNuevoDpto(true);
+                    setNombreDpto("");
+                    setErrorDpto("");
+                  }}
+                  sx={{ whiteSpace: "nowrap", minWidth: "auto", px: 1.5 }}
+                >
+                  Nuevo
+                </Button>
+              </Box>
+            ) : (
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                {errorDpto && <Alert severity="error">{errorDpto}</Alert>}
+                <Box sx={{ display: "flex", gap: 1 }}>
+                  <TextField
+                    fullWidth
+                    label="Nombre del departamento"
+                    value={nombreDpto}
+                    onChange={(e) => setNombreDpto(e.target.value)}
+                  />
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={async () => {
+                      if (!nombreDpto) {
+                        setErrorDpto("El nombre es requerido");
+                        return;
+                      }
+                      try {
+                        const res = await api.post("/personas/departamentos", {
+                          nombre: nombreDpto,
+                        });
+                        const nuevos = [...departamentos, res.data];
+                        setDepartamentos(nuevos);
+                        setForm({ ...form, departamento_id: res.data.id });
+                        setNuevoDpto(false);
+                      } catch (err) {
+                        setErrorDpto(
+                          err.response?.data?.error ||
+                            "Error al crear departamento",
+                        );
+                      }
+                    }}
+                    sx={{ whiteSpace: "nowrap", minWidth: "auto", px: 1.5 }}
+                  >
+                    Guardar
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => setNuevoDpto(false)}
+                    sx={{ whiteSpace: "nowrap", minWidth: "auto", px: 1.5 }}
+                  >
+                    Cancelar
+                  </Button>
+                </Box>
+              </Box>
+            )}
             {editando && (
               <TextField
                 fullWidth
