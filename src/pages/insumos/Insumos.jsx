@@ -19,26 +19,39 @@ import TextField from "@mui/material/TextField";
 import MenuItem from "@mui/material/MenuItem";
 import Alert from "@mui/material/Alert";
 import Card from "@mui/material/Card";
+import Divider from "@mui/material/Divider";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
+import TuneIcon from "@mui/icons-material/Tune";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import HistoryIcon from "@mui/icons-material/History";
 import api from "../../services/api";
 
-const formVacio = {
-  nombre: "",
-  categoria: "",
-  stock: 0,
-  stock_minimo: 0,
-};
+const formVacio = { nombre: "", categoria: "", stock: 0, stock_minimo: 0 };
+const ajusteVacio = { cantidad_nueva: "", motivo: "" };
+
+const MOTIVOS = [
+  "Inventario físico",
+  "Corrección de error",
+  "Merma",
+  "Donación",
+  "Otro",
+];
 
 export default function Insumos() {
   const [insumos, setInsumos] = useState([]);
   const [categorias, setCategorias] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [ajusteOpen, setAjusteOpen] = useState(false);
+  const [historialOpen, setHistorialOpen] = useState(false);
+  const [insumoActual, setInsumoActual] = useState(null);
+  const [historial, setHistorial] = useState([]);
   const [form, setForm] = useState(formVacio);
+  const [ajusteForm, setAjusteForm] = useState(ajusteVacio);
   const [editando, setEditando] = useState(null);
   const [error, setError] = useState("");
+  const [errorAjuste, setErrorAjuste] = useState("");
   const [categoriaFiltro, setCategoriaFiltro] = useState("");
   const [nuevaCategoria, setNuevaCategoria] = useState(false);
 
@@ -93,6 +106,46 @@ export default function Insumos() {
       cargarDatos();
     } catch (err) {
       setError(err.response?.data?.error || "Error al guardar");
+    }
+  };
+
+  const abrirAjuste = (insumo) => {
+    setInsumoActual(insumo);
+    setAjusteForm({ cantidad_nueva: String(insumo.stock), motivo: "" });
+    setErrorAjuste("");
+    setAjusteOpen(true);
+  };
+
+  const handleAjuste = async () => {
+    if (ajusteForm.cantidad_nueva === "" || ajusteForm.cantidad_nueva < 0) {
+      setErrorAjuste("La cantidad debe ser mayor o igual a cero");
+      return;
+    }
+    if (!ajusteForm.motivo) {
+      setErrorAjuste("El motivo es requerido");
+      return;
+    }
+    try {
+      await api.post("/ajustes", {
+        insumo_id: insumoActual.id,
+        cantidad_nueva: Number(ajusteForm.cantidad_nueva),
+        motivo: ajusteForm.motivo,
+      });
+      setAjusteOpen(false);
+      cargarDatos();
+    } catch (err) {
+      setErrorAjuste(err.response?.data?.error || "Error al ajustar");
+    }
+  };
+
+  const verHistorial = async (insumo) => {
+    try {
+      const res = await api.get(`/ajustes/insumo/${insumo.id}`);
+      setHistorial(res.data);
+      setInsumoActual(insumo);
+      setHistorialOpen(true);
+    } catch {
+      setError("Error al cargar historial");
     }
   };
 
@@ -224,6 +277,22 @@ export default function Insumos() {
                         </Typography>
                       </TableCell>
                       <TableCell align="right">
+                        <Tooltip title="Ajustar stock">
+                          <IconButton
+                            size="small"
+                            onClick={() => abrirAjuste(insumo)}
+                          >
+                            <TuneIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Historial de ajustes">
+                          <IconButton
+                            size="small"
+                            onClick={() => verHistorial(insumo)}
+                          >
+                            <HistoryIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
                         <Tooltip title="Editar">
                           <IconButton
                             size="small"
@@ -242,6 +311,7 @@ export default function Insumos() {
         </TableContainer>
       </Card>
 
+      {/* Dialog nuevo/editar insumo */}
       <Dialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
@@ -320,7 +390,9 @@ export default function Insumos() {
                 inputProps={{ min: 0 }}
                 disabled={!!editando}
                 helperText={
-                  editando ? "El stock se ajusta por compras y entregas" : ""
+                  editando
+                    ? "Usa el ajuste de stock para modificar la cantidad"
+                    : ""
                 }
               />
               <TextField
@@ -341,6 +413,160 @@ export default function Insumos() {
           <Button variant="contained" onClick={handleGuardar}>
             Guardar
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog ajuste de stock */}
+      <Dialog
+        open={ajusteOpen}
+        onClose={() => setAjusteOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Ajustar stock — {insumoActual?.nombre}</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
+            {errorAjuste && <Alert severity="error">{errorAjuste}</Alert>}
+
+            <Box
+              sx={{ p: 1.5, bgcolor: "background.default", borderRadius: 2 }}
+            >
+              <Typography variant="caption" color="text.secondary">
+                Stock actual
+              </Typography>
+              <Typography variant="h5" fontWeight={700}>
+                {insumoActual?.stock}
+              </Typography>
+            </Box>
+
+            <TextField
+              fullWidth
+              label="Cantidad real (inventario físico)"
+              type="number"
+              value={ajusteForm.cantidad_nueva}
+              onChange={(e) =>
+                setAjusteForm({ ...ajusteForm, cantidad_nueva: e.target.value })
+              }
+              inputProps={{ min: 0 }}
+              helperText={
+                ajusteForm.cantidad_nueva !== "" &&
+                ajusteForm.cantidad_nueva !== String(insumoActual?.stock)
+                  ? `Diferencia: ${Number(ajusteForm.cantidad_nueva) - (insumoActual?.stock || 0) > 0 ? "+" : ""}${Number(ajusteForm.cantidad_nueva) - (insumoActual?.stock || 0)}`
+                  : ""
+              }
+            />
+
+            <TextField
+              select
+              fullWidth
+              label="Motivo"
+              value={ajusteForm.motivo}
+              onChange={(e) =>
+                setAjusteForm({ ...ajusteForm, motivo: e.target.value })
+              }
+            >
+              {MOTIVOS.map((m) => (
+                <MenuItem key={m} value={m}>
+                  {m}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setAjusteOpen(false)}>Cancelar</Button>
+          <Button variant="contained" onClick={handleAjuste}>
+            Confirmar ajuste
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog historial de ajustes */}
+      <Dialog
+        open={historialOpen}
+        onClose={() => setHistorialOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Historial de ajustes — {insumoActual?.nombre}</DialogTitle>
+        <DialogContent sx={{ p: 0 }}>
+          {historial.length === 0 ? (
+            <Box sx={{ p: 3 }}>
+              <Typography variant="body2" color="text.secondary">
+                No hay ajustes registrados.
+              </Typography>
+            </Box>
+          ) : (
+            <Table>
+              <TableHead>
+                <TableRow sx={{ bgcolor: "background.default" }}>
+                  <TableCell>
+                    <Typography variant="subtitle1">Fecha</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="subtitle1">Antes</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="subtitle1">Después</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="subtitle1">Diferencia</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="subtitle1">Motivo</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="subtitle1">Ajustado por</Typography>
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {historial.map((h) => (
+                  <TableRow key={h.id} hover>
+                    <TableCell>
+                      <Typography variant="body2">
+                        {new Date(h.fecha_registro).toLocaleDateString("es-HN")}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">
+                        {h.cantidad_antes}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">
+                        {h.cantidad_nueva}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography
+                        variant="body2"
+                        fontWeight={600}
+                        color={
+                          h.diferencia > 0
+                            ? "success.main"
+                            : h.diferencia < 0
+                              ? "error.main"
+                              : "text.secondary"
+                        }
+                      >
+                        {h.diferencia > 0 ? `+${h.diferencia}` : h.diferencia}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">{h.motivo}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">{h.ajustado_por}</Typography>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setHistorialOpen(false)}>Cerrar</Button>
         </DialogActions>
       </Dialog>
     </Box>

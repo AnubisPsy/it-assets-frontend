@@ -22,10 +22,17 @@ import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import api from "../../services/api";
 import Avatar from "@mui/material/Avatar";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Switch from "@mui/material/Switch";
 
 const BASE_URL = "http://localhost:3000";
 
-const formVacio = { nombre: "", usuario: "", password: "" };
+const formVacio = {
+  nombre: "",
+  usuario: "",
+  password: "",
+  debe_cambiar_password: false,
+};
 
 export default function Usuarios() {
   const [usuarios, setUsuarios] = useState([]);
@@ -59,6 +66,7 @@ export default function Usuarios() {
             usuario: usuario.usuario,
             password: "",
             activo: usuario.activo,
+            debe_cambiar_password: !!usuario.debe_cambiar_password,
           }
         : formVacio,
     );
@@ -258,6 +266,20 @@ export default function Usuarios() {
               type="password"
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={!!form.debe_cambiar_password}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      debe_cambiar_password: e.target.checked,
+                    })
+                  }
+                />
+              }
+              label="Solicitar cambio de contraseña en el próximo inicio de sesión"
             />
             {editando && (
               <TextField
