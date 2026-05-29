@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Card from "@mui/material/Card";
@@ -15,6 +15,46 @@ import FingerprintIcon from "@mui/icons-material/Fingerprint";
 import { io } from "socket.io-client";
 
 const socket = io("http://192.168.0.233:6060");
+
+const MarqueeName = ({ nombre }) => {
+  const containerRef = useRef(null);
+  const textRef = useRef(null);
+  const [overflow, setOverflow] = useState(0);
+
+  useEffect(() => {
+    if (!containerRef.current || !textRef.current) return;
+    const containerWidth = containerRef.current.offsetWidth;
+    const textWidth = textRef.current.offsetWidth;
+    setOverflow(Math.max(0, textWidth - containerWidth));
+  }, [nombre]);
+
+  return (
+    <Box ref={containerRef} sx={{ flex: 1, overflow: "hidden", minWidth: 0 }}>
+      <Typography
+        ref={textRef}
+        style={overflow > 0 ? { "--scroll-px": `-${overflow}px` } : undefined}
+        sx={{
+          fontFamily: "'Outfit', sans-serif",
+          fontWeight: 700,
+          fontSize: "1.6rem",
+          lineHeight: 1.3,
+          whiteSpace: "nowrap",
+          display: "inline-block",
+          ...(overflow > 0 && {
+            animation: "scroll-name 10s ease-in-out infinite",
+            "@keyframes scroll-name": {
+              "0%, 15%": { transform: "translateX(0)" },
+              "50%, 65%": { transform: "translateX(var(--scroll-px))" },
+              "100%": { transform: "translateX(0)" },
+            },
+          }),
+        }}
+      >
+        {nombre}
+      </Typography>
+    </Box>
+  );
+};
 
 const GrupoCards = ({ titulo, icono, items, tipo, verificando, onVerificar }) => {
   const online = items.filter((s) => s.estado === "online").length;
@@ -78,121 +118,129 @@ const GrupoCards = ({ titulo, icono, items, tipo, verificando, onVerificar }) =>
                 bgcolor: isOnline
                   ? "rgba(46, 125, 50, 0.04)"
                   : "rgba(211, 47, 47, 0.04)",
+                overflow: "hidden",
               }}
             >
-              <CardContent sx={{ p: 2 }}>
+              <CardContent sx={{ p: 0, "&:last-child": { pb: 0 } }}>
+                {/* Nombre + botón de refresco */}
                 <Box
                   sx={{
+                    px: 2,
+                    pt: 2,
+                    pb: 2,
                     display: "flex",
+                    alignItems: "flex-start",
                     justifyContent: "space-between",
-                    alignItems: "center",
-                    mb: 1.5,
+                    gap: 1,
                   }}
                 >
-                  <Box
-                    sx={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 2,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      bgcolor: isOnline
-                        ? "rgba(46, 125, 50, 0.12)"
-                        : "rgba(211, 47, 47, 0.12)",
-                    }}
-                  >
-                    {tipo === "biometrico" ? (
-                      <FingerprintIcon
-                        sx={{
-                          fontSize: 18,
-                          color: isOnline ? "success.main" : "error.main",
-                        }}
-                      />
-                    ) : (
-                      <StorageIcon
-                        sx={{
-                          fontSize: 18,
-                          color: isOnline ? "success.main" : "error.main",
-                        }}
-                      />
-                    )}
-                  </Box>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                    <Chip
-                      label={isOnline ? "En línea" : "Fuera"}
-                      color={isOnline ? "success" : "error"}
+                  <MarqueeName nombre={servidor.nombre} />
+                  <Tooltip title="Verificar ahora">
+                    <IconButton
                       size="small"
-                      sx={{ fontWeight: 600, fontSize: "0.65rem" }}
-                    />
-                    <Tooltip title="Verificar ahora">
-                      <IconButton
-                        size="small"
-                        onClick={() => onVerificar(tipo, servidor.id)}
-                        disabled={isVerificando}
-                      >
-                        {isVerificando ? (
-                          <CircularProgress size={14} />
-                        ) : (
-                          <RefreshIcon sx={{ fontSize: 16 }} />
-                        )}
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
+                      onClick={() => onVerificar(tipo, servidor.id)}
+                      disabled={isVerificando}
+                      sx={{ mt: -0.5, mr: -0.5, flexShrink: 0 }}
+                    >
+                      {isVerificando ? (
+                        <CircularProgress size={12} />
+                      ) : (
+                        <RefreshIcon
+                          sx={{ fontSize: 14, color: "text.secondary" }}
+                        />
+                      )}
+                    </IconButton>
+                  </Tooltip>
                 </Box>
 
-                <Typography variant="body1" fontWeight={700} mb={0.25} noWrap>
-                  {servidor.nombre}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  noWrap
-                  sx={{
-                    fontFamily: "'DM Mono', monospace",
-                    fontSize: "0.68rem",
-                    mb: 1.5,
-                  }}
-                >
-                  {tipo === "biometrico" ? servidor.ip : servidor.linkedServer}
-                </Typography>
-
+                {/* Barra inferior: hora | ip | círculo */}
                 <Box
                   sx={{
                     display: "flex",
-                    alignItems: "center",
-                    gap: 0.5,
-                    pt: 1.5,
                     borderTop: "1px solid",
                     borderColor: "divider",
                   }}
                 >
                   <Box
                     sx={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: "50%",
-                      flexShrink: 0,
-                      bgcolor: isOnline ? "success.main" : "error.main",
-                      boxShadow: isOnline
-                        ? "0 0 6px rgba(46, 125, 50, 0.6)"
-                        : "none",
-                      animation: isOnline ? "pulse 2s infinite" : "none",
-                      "@keyframes pulse": {
-                        "0%": { opacity: 1 },
-                        "50%": { opacity: 0.4 },
-                        "100%": { opacity: 1 },
-                      },
+                      flex: 1,
+                      py: 1.25,
+                      px: 1.5,
+                      borderRight: "1px solid",
+                      borderColor: "divider",
                     }}
-                  />
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    fontSize="0.68rem"
-                    noWrap
                   >
-                    {new Date(servidor.ultimo_check).toLocaleTimeString("es-HN")}
-                  </Typography>
+                    <Typography
+                      color="text.secondary"
+                      noWrap
+                      sx={{ fontSize: "0.63rem" }}
+                    >
+                      {new Date(servidor.ultimo_check).toLocaleTimeString(
+                        "es-HN",
+                      )}
+                    </Typography>
+                  </Box>
+
+                  <Box
+                    sx={{
+                      flex: 1.2,
+                      py: 1.25,
+                      px: 1.5,
+                      borderRight: "1px solid",
+                      borderColor: "divider",
+                    }}
+                  >
+                    <Typography
+                      color="text.secondary"
+                      noWrap
+                      sx={{
+                        fontSize: "0.63rem",
+                        fontFamily: "'DM Mono', monospace",
+                      }}
+                    >
+                      {tipo === "biometrico"
+                        ? servidor.ip
+                        : servidor.linkedServer}
+                    </Typography>
+                  </Box>
+
+                  <Box
+                    sx={{
+                      flex: 0.5,
+                      py: 1.25,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 10,
+                        height: 10,
+                        borderRadius: "50%",
+                        flexShrink: 0,
+                        bgcolor: isOnline ? "success.main" : "error.main",
+                        boxShadow: isOnline
+                          ? "0 0 8px rgba(34, 197, 94, 0.7)"
+                          : "0 0 6px rgba(248, 113, 113, 0.5)",
+                        animation: isOnline ? "pulse 2s infinite" : "none",
+                        "@keyframes pulse": {
+                          "0%": {
+                            opacity: 1,
+                            boxShadow: "0 0 6px rgba(34, 197, 94, 0.5)",
+                          },
+                          "50%": {
+                            opacity: 0.7,
+                            boxShadow: "0 0 14px rgba(34, 197, 94, 1)",
+                          },
+                          "100%": {
+                            opacity: 1,
+                            boxShadow: "0 0 6px rgba(34, 197, 94, 0.5)",
+                          },
+                        },
+                      }}
+                    />
+                  </Box>
                 </Box>
               </CardContent>
             </Card>
