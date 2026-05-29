@@ -10,13 +10,18 @@ import Avatar from "@mui/material/Avatar";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
+import Switch from "@mui/material/Switch";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import DeleteIcon from "@mui/icons-material/Delete";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
+import LightModeIcon from "@mui/icons-material/LightMode";
 import api from "../../services/api";
+import { useThemeMode } from "../../context/ThemeContext";
 
 const BASE_URL = "http://192.168.0.233:6060";
 
 export default function Perfil() {
+  const { mode, toggleMode } = useThemeMode();
   const usuario = JSON.parse(localStorage.getItem("usuario") || "{}");
   const [foto, setFoto] = useState(usuario.foto_perfil || null);
   const [form, setForm] = useState({ password: "", confirmar: "" });
@@ -234,8 +239,55 @@ export default function Perfil() {
           </CardContent>
         </Card>
 
+        {/* Columna derecha */}
+        <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 3 }}>
+        {/* Apariencia */}
+        <Card elevation={0}>
+          <CardContent sx={{ p: 3 }}>
+            <Typography variant="h6" mb={0.5}>
+              Apariencia
+            </Typography>
+            <Typography variant="body2" color="text.secondary" mb={2.5}>
+              Personaliza el aspecto visual de la aplicación.
+            </Typography>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                maxWidth: 400,
+                p: 2,
+                borderRadius: 2,
+                border: "1px solid",
+                borderColor: "divider",
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                {mode === "dark" ? (
+                  <DarkModeIcon sx={{ color: "text.secondary", fontSize: 20 }} />
+                ) : (
+                  <LightModeIcon sx={{ color: "text.secondary", fontSize: 20 }} />
+                )}
+                <Box>
+                  <Typography variant="body1" fontWeight={500}>
+                    Modo oscuro
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {mode === "dark" ? "Activado" : "Desactivado"}
+                  </Typography>
+                </Box>
+              </Box>
+              <Switch
+                checked={mode === "dark"}
+                onChange={toggleMode}
+                color="secondary"
+              />
+            </Box>
+          </CardContent>
+        </Card>
+
         {/* Cambiar contraseña */}
-        <Card elevation={0} sx={{ flex: 1 }}>
+        <Card elevation={0}>
           <CardContent sx={{ p: 3 }}>
             <Typography variant="h6" mb={0.5}>
               Cambiar contraseña
@@ -298,6 +350,7 @@ export default function Perfil() {
             </Box>
           </CardContent>
         </Card>
+        </Box>
       </Box>
     </Box>
   );
