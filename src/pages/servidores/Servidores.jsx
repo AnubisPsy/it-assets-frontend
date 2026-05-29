@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Card from "@mui/material/Card";
@@ -21,12 +21,23 @@ const MarqueeName = ({ nombre }) => {
   const textRef = useRef(null);
   const [overflow, setOverflow] = useState(0);
 
-  useEffect(() => {
+  const recalculate = useCallback(() => {
     if (!containerRef.current || !textRef.current) return;
-    const containerWidth = containerRef.current.offsetWidth;
-    const textWidth = textRef.current.offsetWidth;
-    setOverflow(Math.max(0, textWidth - containerWidth));
-  }, [nombre]);
+    const cw = containerRef.current.offsetWidth;
+    const tw = textRef.current.offsetWidth;
+    setOverflow(Math.max(0, tw - cw));
+  }, []);
+
+  useEffect(() => {
+    recalculate();
+  }, [nombre, recalculate]);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const ro = new ResizeObserver(recalculate);
+    ro.observe(containerRef.current);
+    return () => ro.disconnect();
+  }, [recalculate]);
 
   return (
     <Box ref={containerRef} sx={{ flex: 1, overflow: "hidden", minWidth: 0 }}>
@@ -51,6 +62,54 @@ const MarqueeName = ({ nombre }) => {
         }}
       >
         {nombre}
+      </Typography>
+    </Box>
+  );
+};
+
+const MarqueeText = ({ text, textSx }) => {
+  const containerRef = useRef(null);
+  const textRef = useRef(null);
+  const [overflow, setOverflow] = useState(0);
+
+  const recalculate = useCallback(() => {
+    if (!containerRef.current || !textRef.current) return;
+    const cw = containerRef.current.offsetWidth;
+    const tw = textRef.current.offsetWidth;
+    setOverflow(Math.max(0, tw - cw));
+  }, []);
+
+  useEffect(() => {
+    recalculate();
+  }, [text, recalculate]);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const ro = new ResizeObserver(recalculate);
+    ro.observe(containerRef.current);
+    return () => ro.disconnect();
+  }, [recalculate]);
+
+  return (
+    <Box ref={containerRef} sx={{ overflow: "hidden", width: "100%" }}>
+      <Typography
+        ref={textRef}
+        style={overflow > 0 ? { "--scroll-px-t": `-${overflow}px` } : undefined}
+        sx={{
+          whiteSpace: "nowrap",
+          display: "inline-block",
+          ...textSx,
+          ...(overflow > 0 && {
+            animation: "scroll-text 8s ease-in-out infinite",
+            "@keyframes scroll-text": {
+              "0%, 15%": { transform: "translateX(0)" },
+              "50%, 65%": { transform: "translateX(var(--scroll-px-t))" },
+              "100%": { transform: "translateX(0)" },
+            },
+          }),
+        }}
+      >
+        {text}
       </Typography>
     </Box>
   );
@@ -114,7 +173,7 @@ const GrupoCards = ({ titulo, icono, items, tipo, verificando, onVerificar }) =>
                 borderColor: isOnline ? "success.main" : "error.main",
                 borderRadius: 3,
                 opacity: isVerificando ? 0.7 : 1,
-                transition: "all 0.3s ease",
+                transition: "opacity 0.3s ease, border-color 0.3s ease, background-color 0.3s ease",
                 bgcolor: isOnline
                   ? "rgba(46, 125, 50, 0.04)"
                   : "rgba(211, 47, 47, 0.04)",
@@ -168,6 +227,7 @@ const GrupoCards = ({ titulo, icono, items, tipo, verificando, onVerificar }) =>
                       px: 1.5,
                       borderRight: "1px solid",
                       borderColor: "divider",
+                      minWidth: 0,
                     }}
                   >
                     <Typography
@@ -188,20 +248,17 @@ const GrupoCards = ({ titulo, icono, items, tipo, verificando, onVerificar }) =>
                       px: 1.5,
                       borderRight: "1px solid",
                       borderColor: "divider",
+                      minWidth: 0,
                     }}
                   >
-                    <Typography
-                      color="text.secondary"
-                      noWrap
-                      sx={{
+                    <MarqueeText
+                      text={tipo === "biometrico" ? servidor.ip : (servidor.linkedServer || servidor.ip)}
+                      textSx={{
                         fontSize: "0.63rem",
                         fontFamily: "'DM Mono', monospace",
+                        color: "text.secondary",
                       }}
-                    >
-                      {tipo === "biometrico"
-                        ? servidor.ip
-                        : servidor.linkedServer}
-                    </Typography>
+                    />
                   </Box>
 
                   <Box
