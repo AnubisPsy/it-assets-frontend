@@ -4,7 +4,6 @@ import Typography from "@mui/material/Typography";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Chip from "@mui/material/Chip";
-import Grid from "@mui/material/Grid";
 import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
 import IconButton from "@mui/material/IconButton";
@@ -17,25 +16,19 @@ import { io } from "socket.io-client";
 
 const socket = io("http://192.168.0.233:6060");
 
-const GrupoCards = ({
-  titulo,
-  icono,
-  items,
-  tipo,
-  verificando,
-  onVerificar,
-}) => {
+const GrupoCards = ({ titulo, icono, items, tipo, verificando, onVerificar }) => {
   const online = items.filter((s) => s.estado === "online").length;
   const offline = items.filter((s) => s.estado === "offline").length;
 
   return (
-    <Box>
+    <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <Box
         sx={{
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           mb: 2,
+          flexShrink: 0,
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
@@ -52,7 +45,7 @@ const GrupoCards = ({
             sx={{ fontWeight: 600 }}
           />
           <Chip
-            label={`${offline} fuera de línea`}
+            label={`${offline} fuera`}
             color={offline > 0 ? "error" : "default"}
             size="small"
             sx={{ fontWeight: 600 }}
@@ -60,149 +53,152 @@ const GrupoCards = ({
         </Box>
       </Box>
 
-      <Grid container spacing={2}>
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+          gap: 2,
+          alignContent: "start",
+        }}
+      >
         {items.map((servidor) => {
           const isOnline = servidor.estado === "online";
           const isVerificando = verificando[`${tipo}-${servidor.id}`];
 
           return (
-            <Grid item xs={12} sm={6} md={3} key={servidor.id}>
-              <Card
-                elevation={0}
-                sx={{
-                  border: "1px solid",
-                  borderColor: isOnline ? "success.main" : "error.main",
-                  borderRadius: 3,
-                  opacity: isVerificando ? 0.7 : 1,
-                  transition: "all 0.3s ease",
-                  bgcolor: isOnline
-                    ? "rgba(46, 125, 50, 0.04)"
-                    : "rgba(211, 47, 47, 0.04)",
-                }}
-              >
-                <CardContent sx={{ p: 2.5 }}>
+            <Card
+              key={servidor.id}
+              elevation={0}
+              sx={{
+                border: "1px solid",
+                borderColor: isOnline ? "success.main" : "error.main",
+                borderRadius: 3,
+                opacity: isVerificando ? 0.7 : 1,
+                transition: "all 0.3s ease",
+                bgcolor: isOnline
+                  ? "rgba(46, 125, 50, 0.04)"
+                  : "rgba(211, 47, 47, 0.04)",
+              }}
+            >
+              <CardContent sx={{ p: 2 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mb: 1.5,
+                  }}
+                >
                   <Box
                     sx={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 2,
                       display: "flex",
-                      justifyContent: "space-between",
                       alignItems: "center",
-                      mb: 2,
+                      justifyContent: "center",
+                      bgcolor: isOnline
+                        ? "rgba(46, 125, 50, 0.12)"
+                        : "rgba(211, 47, 47, 0.12)",
                     }}
                   >
-                    <Box
-                      sx={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: 2,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        bgcolor: isOnline
-                          ? "rgba(46, 125, 50, 0.12)"
-                          : "rgba(211, 47, 47, 0.12)",
-                      }}
-                    >
-                      {tipo === "biometrico" ? (
-                        <FingerprintIcon
-                          sx={{
-                            fontSize: 20,
-                            color: isOnline ? "success.main" : "error.main",
-                          }}
-                        />
-                      ) : (
-                        <StorageIcon
-                          sx={{
-                            fontSize: 20,
-                            color: isOnline ? "success.main" : "error.main",
-                          }}
-                        />
-                      )}
-                    </Box>
-                    <Box
-                      sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
-                    >
-                      <Chip
-                        label={isOnline ? "En línea" : "Fuera de línea"}
-                        color={isOnline ? "success" : "error"}
-                        size="small"
-                        sx={{ fontWeight: 600, fontSize: "0.7rem" }}
+                    {tipo === "biometrico" ? (
+                      <FingerprintIcon
+                        sx={{
+                          fontSize: 18,
+                          color: isOnline ? "success.main" : "error.main",
+                        }}
                       />
-                      <Tooltip title="Verificar ahora">
-                        <IconButton
-                          size="small"
-                          onClick={() => onVerificar(tipo, servidor.id)}
-                          disabled={isVerificando}
-                        >
-                          {isVerificando ? (
-                            <CircularProgress size={14} />
-                          ) : (
-                            <RefreshIcon sx={{ fontSize: 16 }} />
-                          )}
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
+                    ) : (
+                      <StorageIcon
+                        sx={{
+                          fontSize: 18,
+                          color: isOnline ? "success.main" : "error.main",
+                        }}
+                      />
+                    )}
                   </Box>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                    <Chip
+                      label={isOnline ? "En línea" : "Fuera"}
+                      color={isOnline ? "success" : "error"}
+                      size="small"
+                      sx={{ fontWeight: 600, fontSize: "0.65rem" }}
+                    />
+                    <Tooltip title="Verificar ahora">
+                      <IconButton
+                        size="small"
+                        onClick={() => onVerificar(tipo, servidor.id)}
+                        disabled={isVerificando}
+                      >
+                        {isVerificando ? (
+                          <CircularProgress size={14} />
+                        ) : (
+                          <RefreshIcon sx={{ fontSize: 16 }} />
+                        )}
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </Box>
 
-                  <Typography variant="body1" fontWeight={700} mb={0.5}>
-                    {servidor.nombre}
-                  </Typography>
+                <Typography variant="body1" fontWeight={700} mb={0.25} noWrap>
+                  {servidor.nombre}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  noWrap
+                  sx={{
+                    fontFamily: "'DM Mono', monospace",
+                    fontSize: "0.68rem",
+                    mb: 1.5,
+                  }}
+                >
+                  {tipo === "biometrico" ? servidor.ip : servidor.linkedServer}
+                </Typography>
+
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.5,
+                    pt: 1.5,
+                    borderTop: "1px solid",
+                    borderColor: "divider",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: "50%",
+                      flexShrink: 0,
+                      bgcolor: isOnline ? "success.main" : "error.main",
+                      boxShadow: isOnline
+                        ? "0 0 6px rgba(46, 125, 50, 0.6)"
+                        : "none",
+                      animation: isOnline ? "pulse 2s infinite" : "none",
+                      "@keyframes pulse": {
+                        "0%": { opacity: 1 },
+                        "50%": { opacity: 0.4 },
+                        "100%": { opacity: 1 },
+                      },
+                    }}
+                  />
                   <Typography
                     variant="body2"
                     color="text.secondary"
-                    sx={{
-                      fontFamily: "'DM Mono', monospace",
-                      fontSize: "0.7rem",
-                      mb: 1.5,
-                    }}
+                    fontSize="0.68rem"
+                    noWrap
                   >
-                    {tipo === "biometrico"
-                      ? servidor.ip
-                      : servidor.linkedServer}
+                    {new Date(servidor.ultimo_check).toLocaleTimeString("es-HN")}
                   </Typography>
-
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 0.5,
-                      pt: 1.5,
-                      borderTop: "1px solid",
-                      borderColor: "divider",
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        width: 6,
-                        height: 6,
-                        borderRadius: "50%",
-                        bgcolor: isOnline ? "success.main" : "error.main",
-                        boxShadow: isOnline
-                          ? "0 0 6px rgba(46, 125, 50, 0.6)"
-                          : "none",
-                        animation: isOnline ? "pulse 2s infinite" : "none",
-                        "@keyframes pulse": {
-                          "0%": { opacity: 1 },
-                          "50%": { opacity: 0.4 },
-                          "100%": { opacity: 1 },
-                        },
-                      }}
-                    />
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      fontSize="0.7rem"
-                    >
-                      {new Date(servidor.ultimo_check).toLocaleTimeString(
-                        "es-HN",
-                      )}
-                    </Typography>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
+                </Box>
+              </CardContent>
+            </Card>
           );
         })}
-      </Grid>
+      </Box>
     </Box>
   );
 };
@@ -252,8 +248,21 @@ export default function Servidores() {
     socket.emit("verificar_uno", { tipo, id });
   };
 
+  const totalOnline =
+    servidores.filter((s) => s.estado === "online").length +
+    biometricos.filter((s) => s.estado === "online").length;
+  const totalOffline =
+    servidores.filter((s) => s.estado === "offline").length +
+    biometricos.filter((s) => s.estado === "offline").length;
+
   return (
-    <Box>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        height: "calc(100vh - 48px)",
+      }}
+    >
       {error && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>
           {error}
@@ -264,8 +273,9 @@ export default function Servidores() {
         sx={{
           display: "flex",
           justifyContent: "space-between",
-          alignItems: "flex-start",
-          mb: 4,
+          alignItems: "center",
+          mb: 3,
+          flexShrink: 0,
         }}
       >
         <Box>
@@ -276,6 +286,22 @@ export default function Servidores() {
               : "Conectando..."}
           </Typography>
         </Box>
+        {!loading && (
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <Chip
+              label={`${totalOnline} en línea`}
+              color="success"
+              variant="outlined"
+              sx={{ fontWeight: 600 }}
+            />
+            <Chip
+              label={`${totalOffline} fuera de línea`}
+              color={totalOffline > 0 ? "error" : "default"}
+              variant="outlined"
+              sx={{ fontWeight: 600 }}
+            />
+          </Box>
+        )}
       </Box>
 
       {loading ? (
@@ -285,7 +311,8 @@ export default function Servidores() {
             flexDirection: "column",
             alignItems: "center",
             gap: 2,
-            mt: 10,
+            flex: 1,
+            justifyContent: "center",
           }}
         >
           <CircularProgress size={36} />
@@ -294,24 +321,36 @@ export default function Servidores() {
           </Typography>
         </Box>
       ) : (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <GrupoCards
-            titulo="Servidores"
-            icono={<StorageIcon sx={{ color: "text.secondary" }} />}
-            items={servidores}
-            tipo="servidor"
-            verificando={verificando}
-            onVerificar={verificarUno}
-          />
-          <Divider />
-          <GrupoCards
-            titulo="Biométricos"
-            icono={<FingerprintIcon sx={{ color: "text.secondary" }} />}
-            items={biometricos}
-            tipo="biometrico"
-            verificando={verificando}
-            onVerificar={verificarUno}
-          />
+        <Box
+          sx={{
+            flex: 1,
+            display: "flex",
+            gap: 3,
+            overflow: "hidden",
+            minHeight: 0,
+          }}
+        >
+          <Box sx={{ flex: 1, overflow: "auto", minWidth: 0 }}>
+            <GrupoCards
+              titulo="Servidores"
+              icono={<StorageIcon sx={{ color: "text.secondary" }} />}
+              items={servidores}
+              tipo="servidor"
+              verificando={verificando}
+              onVerificar={verificarUno}
+            />
+          </Box>
+          <Divider orientation="vertical" flexItem />
+          <Box sx={{ flex: 1, overflow: "auto", minWidth: 0 }}>
+            <GrupoCards
+              titulo="Biométricos"
+              icono={<FingerprintIcon sx={{ color: "text.secondary" }} />}
+              items={biometricos}
+              tipo="biometrico"
+              verificando={verificando}
+              onVerificar={verificarUno}
+            />
+          </Box>
         </Box>
       )}
     </Box>

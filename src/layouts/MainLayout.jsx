@@ -19,6 +19,7 @@ import SummarizeIcon from "@mui/icons-material/Summarize";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import Avatar from "@mui/material/Avatar";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import DevicesIcon from "@mui/icons-material/Devices";
@@ -110,6 +111,7 @@ const menuItems = [
 
 export default function MainLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -327,6 +329,19 @@ export default function MainLayout() {
               <LogoutIcon fontSize="small" />
             </IconButton>
           </Tooltip>
+          <Tooltip title="Ocultar menú">
+            <IconButton
+              size="small"
+              onClick={() => setSidebarOpen(false)}
+              sx={{
+                display: { xs: "none", md: "flex" },
+                color: "#ffffff6a",
+                "&:hover": { color: "#ffffff70" },
+              }}
+            >
+              <ChevronLeftIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
         </Box>
       </Box>
     </Box>
@@ -375,7 +390,7 @@ export default function MainLayout() {
       <Drawer
         variant="permanent"
         sx={{
-          display: { xs: "none", md: "block" },
+          display: { xs: "none", md: sidebarOpen ? "block" : "none" },
           "& .MuiDrawer-paper": {
             width: DRAWER_WIDTH,
             border: "none",
@@ -387,15 +402,38 @@ export default function MainLayout() {
         {drawer}
       </Drawer>
 
+      {/* Botón para volver a abrir el sidebar en desktop */}
+      <Tooltip title="Mostrar menú" placement="right">
+        <IconButton
+          onClick={() => setSidebarOpen(true)}
+          sx={{
+            display: { xs: "none", md: sidebarOpen ? "none" : "flex" },
+            position: "fixed",
+            top: 16,
+            left: 16,
+            zIndex: 1300,
+            bgcolor: "#1a1a2e",
+            color: "white",
+            width: 36,
+            height: 36,
+            borderRadius: 2,
+            "&:hover": { bgcolor: "#2d2d4e" },
+          }}
+        >
+          <MenuIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+
       {/* Contenido */}
       <Box
         component="main"
         sx={{
           flexGrow: 1,
-          width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
-          ml: { md: `${DRAWER_WIDTH}px` },
+          width: { md: sidebarOpen ? `calc(100% - ${DRAWER_WIDTH}px)` : "100%" },
+          ml: { md: sidebarOpen ? `${DRAWER_WIDTH}px` : 0 },
           minHeight: "100vh",
           bgcolor: "background.default",
+          transition: "margin-left 0.3s ease, width 0.3s ease",
         }}
       >
         <Box sx={{ p: 3 }}>
