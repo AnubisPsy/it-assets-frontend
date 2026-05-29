@@ -14,7 +14,7 @@ import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import DeleteIcon from "@mui/icons-material/Delete";
 import api from "../../services/api";
 
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = "http://192.168.0.233:6060";
 
 export default function Perfil() {
   const usuario = JSON.parse(localStorage.getItem("usuario") || "{}");

@@ -26,7 +26,7 @@ import DnsIcon from "@mui/icons-material/Dns";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import CategoryIcon from "@mui/icons-material/Category";
 
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = "http://192.168.0.233:6060";
 
 const DRAWER_WIDTH = 240;
 
@@ -192,7 +192,21 @@ export default function MainLayout() {
       </Box>
 
       {/* Nav */}
-      <Box sx={{ flex: 1, py: 2, overflowY: "auto" }}>
+      <Box
+        sx={{
+          flex: 1,
+          py: 2,
+          overflowY: "auto",
+          scrollbarWidth: "thin",
+          scrollbarColor: "#3a3a5e transparent",
+          "&::-webkit-scrollbar": { width: "4px" },
+          "&::-webkit-scrollbar-track": { background: "transparent" },
+          "&::-webkit-scrollbar-thumb": {
+            background: "#3a3a5e",
+            borderRadius: "4px",
+          },
+        }}
+      >
         {menuItems.map((group) => (
           <Box key={group.section} sx={{ mb: 1 }}>
             <Typography

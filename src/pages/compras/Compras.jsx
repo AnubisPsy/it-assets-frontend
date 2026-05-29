@@ -36,7 +36,7 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import api from "../../services/api";
 
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = "http://192.168.0.233:6060";
 
 const getFileUrl = (p) => {
   if (!p) return null;

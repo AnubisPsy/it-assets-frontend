@@ -25,7 +25,7 @@ import Avatar from "@mui/material/Avatar";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Switch from "@mui/material/Switch";
 
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = "http://192.168.0.233:6060";
 
 const formVacio = {
   nombre: "",
