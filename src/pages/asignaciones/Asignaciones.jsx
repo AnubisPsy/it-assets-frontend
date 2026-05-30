@@ -147,7 +147,7 @@ export default function Asignaciones() {
       link.href = url;
       link.setAttribute(
         "download",
-        `constancia_${limpiarNombre(asignacion.persona_nombre)}_${new Date(asignacion.fecha_asignacion).toLocaleDateString("es-HN").replace(/\//g, "-")}.pdf`,
+        `constancia_${limpiarNombre(asignacion.persona_nombre)}_${new Date(asignacion.fecha_asignacion).toLocaleDateString("es-HN", { timeZone: "UTC" }).replace(/\//g, "-")}.pdf`,
       );
       document.body.appendChild(link);
       link.click();
@@ -434,6 +434,7 @@ export default function Asignaciones() {
                       <Typography variant="body2">
                         {new Date(a.fecha_asignacion).toLocaleDateString(
                           "es-HN",
+                          { timeZone: "UTC" },
                         )}
                       </Typography>
                     </TableCell>
