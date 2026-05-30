@@ -28,6 +28,7 @@ import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import api from "../../services/api";
+import socket from "../../services/socket";
 
 export default function Asignaciones() {
   const [asignaciones, setAsignaciones] = useState([]);
@@ -78,6 +79,15 @@ export default function Asignaciones() {
 
   useEffect(() => {
     cargarDatos();
+  }, []);
+
+  useEffect(() => {
+    socket.on("asignacion_creada", () => cargarDatos());
+    socket.on("asignacion_devolucion", () => cargarDatos());
+    return () => {
+      socket.off("asignacion_creada");
+      socket.off("asignacion_devolucion");
+    };
   }, []);
 
   useEffect(() => {
